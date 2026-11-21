@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: thatsmine
+  jpa:
+    database-platform: org.hibernate.dialect.MySQL8Dialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:thatsmine}?serverTimezone=UTC
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  flyway:
+    baseline-on-migrate: true
+    baseline-version: 0
+
+jwt:
+  secret: ${JWT_SECRET:}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+logging:
+  level:
+    root: INFO
+    com.thatsmine: DEBUG
+  file:
+    name: logs/thatsmine.log
+    max-size: 10MB
+    max-history: 30

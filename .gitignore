@@ -1,0 +1,25 @@
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env*.local
+
+# Backend
+backend/build/
+backend/.gradle/
+backend/.env
+backend/application-local.yml
+backend/logs/
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Project-specific
+uploads/
+*.log
