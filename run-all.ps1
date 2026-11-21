@@ -79,9 +79,9 @@ if (-not $SkipChecks) {
     Write-Host ("node   : " + $nv)
     if ($nv -match 'v(\d+)\.(\d+)') {
       $maj = [int]$Matches[1]; $min = [int]$Matches[2]
-      if ($maj -lt 20 -or ($maj -eq 20 -and $min -lt 19)) { $missing += "Node.js 20.19 이상 또는 22 LTS (현재 $nv)" }
+      if ($maj -lt 22 -or ($maj -eq 22 -and $min -lt 12)) { $missing += "Node.js 22.12 이상 또는 24 LTS (현재 $nv, Vitest 5 요구사항)" }
     }
-  } else { $missing += 'Node.js 22 LTS (https://nodejs.org)' }
+  } else { $missing += 'Node.js 24 LTS (https://nodejs.org)' }
 
   if (Get-Command mysql -ErrorAction SilentlyContinue) {
     Write-Host ("mysql  : " + (Get-CmdOutput 'mysql --version'))

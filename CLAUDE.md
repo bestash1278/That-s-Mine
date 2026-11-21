@@ -40,6 +40,28 @@ UI·기능 결정을 내릴 때는 아래 문서를 근거로 삼는다. 모두 
 - 마이그레이션: Flyway (`backend/src/main/resources/db/migration/V*__*.sql`)
 - 위 목록에 없는 라이브러리는 꼭 필요할 때만 추가하고, 추가 이유를 커밋 메시지에 적는다
 
+### 버전 기준 (2026-11 확인, 호환성 검증된 조합)
+| 영역 | 버전 | 비고 |
+|---|---|---|
+| JDK | 17 (21도 가능) | Boot 3.5는 Java 17~25 지원 |
+| Spring Boot | **3.5.16** | 3.x 마지막 릴리스. 3.4.x는 2025-12 지원 종료. 명세가 3.x를 요구하므로 4.x로 올리지 않는다 |
+| io.spring.dependency-management | 1.1.7 | |
+| Gradle Wrapper | **8.14.x** | Boot 3.5는 Gradle 7.6.4+/8.4+를 지원하고 9.x는 공식 목록에 없음. `gradlew`, `gradlew.bat`, `gradle/wrapper/*`를 반드시 커밋 |
+| MySQL 드라이버 | `runtimeOnly 'com.mysql:mysql-connector-j'` (버전 생략, Boot 관리) | 옛 좌표 `mysql:mysql-connector-java` 금지 |
+| Flyway / H2 / Hibernate | Boot 관리 버전 사용(직접 버전 지정 금지) | `flyway-core` + `flyway-mysql` |
+| Hibernate dialect | 지정하지 않음(자동 감지) | `MySQL8Dialect`는 deprecated |
+| jjwt | 0.13.0 (`jjwt-api`, `jjwt-impl`, `jjwt-jackson`) | |
+| MySQL 서버 | **8.4 LTS** | 8.0은 2026-04 EOL |
+| Node.js | **22.12 이상 또는 24 LTS** | Vitest 5가 Node 22.12+를 요구 |
+| Vite / @vitejs/plugin-react | 8.x / 6.x | plugin-react 6은 Vite 8 필요 |
+| Vitest | 5.x + **jsdom** devDependency | jsdom 없으면 테스트 환경 로드 실패 |
+| React / React Router | 19.x / `react-router-dom` 7.x | |
+| Tailwind CSS | 3.4.x + PostCSS + autoprefixer | v4로 올리지 않는다(설정 방식이 다름). `src/index.css`에 `@tailwind base; @tailwind components; @tailwind utilities;` |
+| 기타 | axios 1.x, lucide-react 최신, @testing-library/react 16 + @testing-library/dom 10 + jest-dom | 빌드 도구(tailwind, postcss, autoprefixer)는 devDependencies |
+
+### 시간대
+- 날짜 검증(미래 날짜 금지)은 한국 시간 기준이다. 백엔드는 `Asia/Seoul`로 고정한다(`TimeZone.setDefault` 또는 `-Duser.timezone`, JDBC URL `serverTimezone=Asia/Seoul`, `spring.jpa.properties.hibernate.jdbc.time_zone=Asia/Seoul`). 프론트의 "오늘" 기본값도 로컬 날짜로 계산한다(`toISOString()`은 UTC라서 쓰지 않는다)
+
 ## 개발 환경 주의사항 (Windows)
 - 프로젝트 경로 `C:\That's Mine`에 **작은따옴표와 공백**이 있다. 셸 명령에서 경로는 항상 큰따옴표로 감싼다. 스크립트에 절대경로를 하드코딩하지 않는다.
 - 백엔드 빌드는 `gradlew.bat` (PowerShell: `.\gradlew.bat`) 사용
@@ -91,7 +113,7 @@ npm run test                 # Vitest
 
 ## UI 규칙
 - 모든 사용자 노출 텍스트는 한국어
-- 색상(Tailwind theme에 토큰으로 등록): primary `#183B62`, accent `#2563EB`, bg `#F5F7FA`, card `#FFFFFF`, text `#1F2937`, sub `#6B7280`, success `#16A34A`, error `#DC2626`
+- 색상(Tailwind theme에 토큰으로 등록): primary `#183B62`, accent `#2563EB`, surface `#F5F7FA`(페이지 배경), card `#FFFFFF`, ink `#1F2937`(본문), ink-sub `#6B7280`(보조), success `#16A34A`, error `#DC2626`. `text`, `bg` 같은 Tailwind 유틸리티와 겹치는 키 이름은 쓰지 않는다
 - 그라데이션·과한 애니메이션 금지, 카드형 UI, 버튼/입력/카드 스타일은 공통 컴포넌트로 통일
 - 상태는 색상 + 텍스트 배지로 함께 표시
 - 로딩 / 오류 / 결과 없음 / 완료 상태를 모든 데이터 화면에 구현

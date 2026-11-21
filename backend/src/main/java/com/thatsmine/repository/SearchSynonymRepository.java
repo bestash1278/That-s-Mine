@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface SearchSynonymRepository extends JpaRepository<SearchSynonym, Long> {
     Optional<SearchSynonym> findByTerm(String term);
     List<SearchSynonym> findByTermContaining(String term);
+    List<SearchSynonym> findByCanonical(String canonical);
 }
