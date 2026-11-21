@@ -1,122 +1,48 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { Routes, Route } from 'react-router-dom';
+import Layout from './components/layout/Layout.jsx';
+import HomePage from './pages/HomePage.jsx';
+import ComingSoonPage from './pages/ComingSoonPage.jsx';
+import './App.css';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <Layout>
+      <Routes>
+        {/* 1. 메인 페이지 */}
+        <Route path="/" element={<HomePage />} />
 
-      <div className="ticks"></div>
+        {/* 2. 조회 페이지 (검색 결과) */}
+        <Route path="/items" element={<ComingSoonPage title="분실물 조회" />} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        {/* 3. 상세 페이지 */}
+        <Route path="/items/:id" element={<ComingSoonPage title="물품 상세정보" />} />
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        {/* 4. 습득물 신고 */}
+        <Route path="/report-found" element={<ComingSoonPage title="습득물 신고" />} />
+
+        {/* 5. 분실 신고 */}
+        <Route path="/report-lost" element={<ComingSoonPage title="분실 신고" />} />
+
+        {/* 6. 지도 조회 */}
+        <Route path="/map" element={<ComingSoonPage title="지도에서 조회" />} />
+
+        {/* 7. 로그인 */}
+        <Route path="/login" element={<ComingSoonPage title="로그인" />} />
+
+        {/* 8. 회원가입 */}
+        <Route path="/signup" element={<ComingSoonPage title="회원가입" />} />
+
+        {/* 9. 마이페이지 */}
+        <Route path="/mypage" element={<ComingSoonPage title="마이페이지" />} />
+
+        {/* 10. 반환 신청 */}
+        <Route path="/return-request/:id" element={<ComingSoonPage title="반환 신청" />} />
+
+        {/* 11. 관리자 페이지 */}
+        <Route path="/admin" element={<ComingSoonPage title="관리자 페이지" />} />
+      </Routes>
+    </Layout>
+  );
 }
 
-export default App
+export default App;
