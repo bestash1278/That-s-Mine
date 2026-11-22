@@ -96,7 +96,7 @@
 |---|---|
 | `python -I backend/scripts/mysql_api_check_stage11.py` | 29개 통과 / 0 실패 |
 | `python -I backend/scripts/mysql_api_check_stage10.py` (회귀) | 91개 통과 |
-| `backend: .\gradlew.bat test` (H2) | 통과 (`MatchScorerTest` 14개 추가) |
+| `backend: .\gradlew.bat test` (H2) | 통과 (`MatchScorerTest` 15개 추가) |
 | `frontend: npm test` | 17개 파일, 93개 통과 |
 | `frontend: npm run build` / `npm run lint` | 통과 / 오류 0 |
 
