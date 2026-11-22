@@ -467,7 +467,7 @@
 - **SPA 라우팅**: `SpaForwardController`(화면 주소 새로 고침 → index.html, `/api`·`/uploads`·점이 있는 파일 경로는 제외), 보안 규칙에 "`/api/`가 아닌 GET은 화면"을 추가(`SecurityConfig`). 테스트 `SpaRoutingTest`(화면 경로 17개 + 없는 API는 JSON 401 + 없는 파일·업로드 404 + POST 거절)
 - **`demo` 프로필**: `application-demo.yml`, `DemoProfileGuard`(시연 계정 비밀번호 `DEMO_ACCOUNT_PASSWORD` 필수·8자 이상, 없으면 한국어 안내와 함께 시작 실패), 시연 데이터는 DB가 비어 있을 때만 생성, 시연 초기화는 관리자만(dev·demo 프로필). `DB_OPTIONS`(TLS 등 연결 옵션)·`PORT`·`UPLOAD_DIR`을 환경변수로
 - **배포 안내** `docs/DEPLOY.md`: 공식 문서(Render·TiDB Cloud·Aiven·Railway)를 확인해 **Render(Docker 무료) + TiDB Cloud Starter(MySQL 호환 무료)** 추천, Railway 대안, 사용자가 할 단계 번호 목록, 환경변수 표, 한계. `scripts/smoke-test.ps1`(비밀번호는 입력받음)
-- **GitHub 공유**: 비밀값 점검(작업 트리 + git 이력 전체) 후 push
+- **GitHub 공유**: 비밀값 점검(작업 트리 + git 이력 전체) 후 `git push origin master` 실행 → `af875a3..b277388`(커밋 7개 추가). 원격 저장소는 `https://github.com/bestash1278/That-s-Mine`이며 **이미 공개(public)** 상태였다(인증 없이 API 조회 HTTP 200으로 확인). 따라서 이번 push로 6~12단계 코드와 프롬프트 기록(`docs/PROMPT_HISTORY.md`, `prompts/`)도 공개됐다. 점검에서 키·토큰·DB 비밀번호·`.env`는 없었다. 비공개로 바꾸려면 GitHub 설정에서 직접 바꾼다
 - **프롬프트 기록** `docs/PROMPT_HISTORY.md`(52건: 앱 채팅 16·Claude Code 36, 분류별·단계별 요약, 단계 프롬프트 파일 첨부), **제출 요약** `docs/SUBMISSION.md`(제출물 ①~④·평가 기준 체크표)
 
 ### 내린 결정
@@ -498,7 +498,7 @@
 ### 사용자가 직접 해야 할 일
 1. 배포 플랫폼 가입·환경변수 입력·배포(`docs/DEPLOY.md` 4번), 시연 계정 비밀번호 정하기(제출 때 따로 전달)
 2. Kakao 허용 도메인에 배포 주소 추가(지도를 쓸 때)
-3. GitHub 저장소 공개/비공개 결정
+3. GitHub 저장소 공개 범위 확인(지금은 공개). 비공개로 바꾸려면 GitHub 설정에서 직접 변경
 4. 배포 후 `docs/DEPLOY_URL.txt` 작성 → 스모크 테스트 결과를 DEPLOY.md에 기록
 5. 과제 안내문의 다섯 번째 평가 기준 확인(`docs/SUBMISSION.md` 체크표)
 

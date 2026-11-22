@@ -68,7 +68,7 @@ React 빌드 결과를 Spring Boot가 함께 제공하는 **단일 서비스**�
 
 계정 생성·로그인·결제 정보 입력·비밀값 입력은 **사용자가 직접** 한다(Claude Code가 하지 않는다).
 
-1. **코드를 GitHub에 올린다.** 원격(`origin`)은 이미 `https://github.com/bestash1278/That-s-Mine.git`로 연결돼 있다. 저장소를 **공개로 할지 비공개로 할지는 직접 정한다**(GitHub 저장소 설정 → Change visibility). 아직 push하지 않았다면 `git push origin master`(저장소 기본 브랜치 이름은 `master`다).
+1. **코드를 GitHub에 올린다.** 원격(`origin`)은 `https://github.com/bestash1278/That-s-Mine.git`이고 2026-11-22에 `master`를 push했다. 이 저장소는 **공개(public)** 이다(공개 저장소라서 Render 같은 서비스가 바로 읽을 수 있다). 비공개로 바꾸려면 GitHub 저장소 설정 → Change visibility를 쓰되, 그러면 Render에서 GitHub 계정 연동 권한을 줘야 한다. 이후 변경은 `git push origin master`(기본 브랜치 이름은 `master`).
 2. **비밀값을 준비한다.** `JWT_SECRET`을 위 명령으로 만들고, `DEMO_ACCOUNT_PASSWORD`를 정한다. 안전한 곳(비밀번호 관리자)에 적어 두고 저장소·채팅에 붙여 넣지 않는다.
 3. **TiDB Cloud Starter 인스턴스를 만든다.** 가입 → Starter 인스턴스 생성(리전 선택) → Connect 화면에서 host·port·user·password를 확인 → SQL 편집기에서 `CREATE DATABASE thatsmine CHARACTER SET utf8mb4;` 실행.
 4. **Render에서 서비스를 만든다.** 가입(GitHub 연동) → New → Blueprint → 이 저장소 선택(루트의 `render.yaml`을 읽는다). 또는 New → Web Service → Docker → 이 저장소.

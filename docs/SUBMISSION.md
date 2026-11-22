@@ -115,7 +115,7 @@ cd frontend; npm install; npm run dev                                           
 
 | # | 제출물 | 파일·링크 | 상태 |
 |---|---|---|---|
-| ① | 소스 코드(GitHub 저장소) | https://github.com/bestash1278/That-s-Mine · 원격(`origin`)에 push됨(아래 push 기록은 `docs/PROGRESS.md` 13단계). 공개/비공개는 사용자가 정한다 | 완료(공개 범위는 **사용자 작업 필요**) |
+| ① | 소스 코드(GitHub 저장소) | https://github.com/bestash1278/That-s-Mine · 2026-11-22에 `master`를 push함(`af875a3`..`b277388`, 13단계 커밋 포함). 저장소는 **공개(public)** 상태(인증 없이 조회되는 것을 확인). 비공개로 바꾸려면 GitHub 저장소 설정 → Change visibility | 완료 |
 | ② | 실행 가능한 결과물 또는 배포 링크 | `Dockerfile`, `docker-compose.yml`, `render.yaml`, [`DEPLOY.md`](DEPLOY.md), `scripts/build-single.ps1`·`smoke-test.ps1`. 단일 jar 실행·스모크 14개 확인 | 실행 가능한 결과물은 **완료**, 배포 링크는 **사용자 작업 필요** |
 | ③ | 개발 과정에서 사용한 프롬프트 전체(순서대로) | [`PROMPT_HISTORY.md`](PROMPT_HISTORY.md) (52건: 앱 채팅 16, Claude Code 36) | 완료 |
 | ④ | 프로젝트 설명·주요 기능 요약 | 이 문서, [`../README.md`](../README.md) | 완료 |
