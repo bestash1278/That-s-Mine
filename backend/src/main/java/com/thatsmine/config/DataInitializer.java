@@ -8,12 +8,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * dev 프로필로 처음 실행할 때 시연 데이터를 만든다. 운영(기본) 프로필에서는 동작하지 않는다.
+ * dev·demo 프로필로 처음 실행할 때(DB에 시연 데이터가 아직 없을 때만) 시연 데이터를 만든다. 운영(기본) 프로필에서는 동작하지 않는다.
  * 실제 데이터 내용은 {@link DemoDataSeeder}에 있다.
  */
 @Slf4j
 @Component
-@Profile("dev")
+@Profile({"dev", "demo"})
 @RequiredArgsConstructor
 public class DataInitializer implements CommandLineRunner {
 

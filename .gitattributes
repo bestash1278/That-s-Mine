@@ -1,0 +1,5 @@
+# 줄 끝: 셸 스크립트·gradlew는 항상 LF(리눅스 Docker 빌드에서 깨지지 않게)
+*.sh text eol=lf
+backend/gradlew text eol=lf
+*.yml text eol=lf
+Dockerfile text eol=lf

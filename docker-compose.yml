@@ -1,0 +1,48 @@
+# 로컬 공유용: MySQL 8.4 + 앱(프론트 포함 단일 서비스). 한 번에 실행:
+#   1) .env.example 을 .env 로 복사하고 빈 값(DB_PASSWORD, JWT_SECRET, DEMO_ACCOUNT_PASSWORD)을 채운다
+#   2) docker compose up --build
+#   3) http://localhost:8080
+# 실제 비밀값은 .env 에만 둔다(.env 는 .gitignore 대상이라 저장소에 올라가지 않는다).
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?.env 에 DB_PASSWORD(MySQL root 비밀번호)를 설정해 주세요}
+      MYSQL_DATABASE: ${DB_NAME:-thatsmine}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--default-time-zone=+09:00"]
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build:
+      context: .
+      args:
+        VITE_KAKAO_MAP_KEY: ${VITE_KAKAO_MAP_KEY:-}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: demo
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: ${DB_NAME:-thatsmine}
+      DB_USER: root
+      DB_PASSWORD: ${DB_PASSWORD:?.env 에 DB_PASSWORD 를 설정해 주세요}
+      JWT_SECRET: ${JWT_SECRET:?.env 에 JWT_SECRET(32자 이상)을 설정해 주세요}
+      DEMO_ACCOUNT_PASSWORD: ${DEMO_ACCOUNT_PASSWORD:?.env 에 DEMO_ACCOUNT_PASSWORD(8자 이상)를 설정해 주세요}
+      UPLOAD_DIR: /app/uploads
+    volumes:
+      - uploads:/app/uploads
+
+volumes:
+  db-data:
+  uploads:

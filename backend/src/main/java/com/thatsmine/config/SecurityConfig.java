@@ -61,6 +61,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories", "/api/v1/campus-buildings",
                                 "/api/v1/storage-locations").permitAll()
                         .requestMatchers(HttpMethod.GET, "/uploads/**").permitAll()
+                        // 화면(index.html·정적 파일·새로 고침한 화면 경로)은 /api가 아닌 모든 GET. 로그인 여부는 화면이 아니라 API가 판단한다.
+                        .requestMatchers(request -> HttpMethod.GET.matches(request.getMethod())
+                                && !request.getRequestURI().startsWith("/api/")).permitAll()
                         .requestMatchers("/error").permitAll()
                         // 관리자
                         .requestMatchers("/api/v1/admin/**", "/api/v1/dev/**").hasRole("ADMIN")

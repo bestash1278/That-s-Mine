@@ -1,3 +1,9 @@
+server:
+  # 배포 플랫폼이 PORT 환경변수로 포트를 알려 준다(없으면 8080)
+  port: ${PORT:8080}
+  # 프록시(플랫폼 로드밸런서) 뒤에서 https 주소를 올바르게 인식
+  forward-headers-strategy: framework
+
 spring:
   application:
     name: thatsmine
@@ -13,7 +19,7 @@ spring:
         jdbc:
           time_zone: Asia/Seoul
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:thatsmine}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:thatsmine}?serverTimezone=Asia/Seoul&characterEncoding=UTF-8${DB_OPTIONS:}
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver

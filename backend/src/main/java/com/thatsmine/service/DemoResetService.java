@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 카테고리와 검색 동의어(Flyway 관리)는 그대로 두고 나머지 데이터를 지운 뒤 다시 만든다.
  */
 @Service
-@Profile("dev")
+@Profile({"dev", "demo"})
 @RequiredArgsConstructor
 public class DemoResetService {
 

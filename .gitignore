@@ -27,3 +27,4 @@ uploads/
 backend/uploads/
 logs/
 *.log
+backend/src/main/resources/static/

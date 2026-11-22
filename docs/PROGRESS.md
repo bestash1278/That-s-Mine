@@ -457,3 +457,50 @@
 | `backend/scripts/mysql_api_check_stage12.py` (MySQL, 실제 HTTP, 동시 6회 요청 포함) | 28 통과 / 0 실패. Flyway V4가 MySQL에 적용됨 |
 | 기존 MySQL 점검 7~9단계·10단계·11단계 재실행 | 33 / 91 / 29 통과 |
 | `node scripts/browser/flows.mjs` 재실행 | 36단계 통과 |
+
+## 13단계 — 배포 준비와 제출 자료
+
+작성: 2026-11-22. 12단계의 빌드·테스트가 통과한 상태(백엔드 106→136개, 프론트 100개)에서 시작했다. **실제 배포는 하지 않았다**(플랫폼 가입·비밀값 입력은 사용자 작업).
+
+### 한 일
+- **단일 서비스 배포 형태**: React 빌드 결과를 Spring Boot가 함께 제공. `Dockerfile`(Node 빌드 → Gradle `-PwithFrontend` → JRE), `docker-compose.yml`(MySQL 8.4 + 앱), `.dockerignore`, 루트 `.env.example`(값 없음), `render.yaml`(비밀값은 `sync: false`), `.gitattributes`(gradlew LF), `scripts/build-single.ps1`
+- **SPA 라우팅**: `SpaForwardController`(화면 주소 새로 고침 → index.html, `/api`·`/uploads`·점이 있는 파일 경로는 제외), 보안 규칙에 "`/api/`가 아닌 GET은 화면"을 추가(`SecurityConfig`). 테스트 `SpaRoutingTest`(화면 경로 17개 + 없는 API는 JSON 401 + 없는 파일·업로드 404 + POST 거절)
+- **`demo` 프로필**: `application-demo.yml`, `DemoProfileGuard`(시연 계정 비밀번호 `DEMO_ACCOUNT_PASSWORD` 필수·8자 이상, 없으면 한국어 안내와 함께 시작 실패), 시연 데이터는 DB가 비어 있을 때만 생성, 시연 초기화는 관리자만(dev·demo 프로필). `DB_OPTIONS`(TLS 등 연결 옵션)·`PORT`·`UPLOAD_DIR`을 환경변수로
+- **배포 안내** `docs/DEPLOY.md`: 공식 문서(Render·TiDB Cloud·Aiven·Railway)를 확인해 **Render(Docker 무료) + TiDB Cloud Starter(MySQL 호환 무료)** 추천, Railway 대안, 사용자가 할 단계 번호 목록, 환경변수 표, 한계. `scripts/smoke-test.ps1`(비밀번호는 입력받음)
+- **GitHub 공유**: 비밀값 점검(작업 트리 + git 이력 전체) 후 push
+- **프롬프트 기록** `docs/PROMPT_HISTORY.md`(52건: 앱 채팅 16·Claude Code 36, 분류별·단계별 요약, 단계 프롬프트 파일 첨부), **제출 요약** `docs/SUBMISSION.md`(제출물 ①~④·평가 기준 체크표)
+
+### 내린 결정
+- **추천 플랫폼**: Aiven 무료 MySQL은 2026-11-06부터 신규 생성 불가·12-21 종료라 제외. Render는 MySQL을 제공하지 않아 외부 DB 필요 → TiDB Cloud Starter. TiDB는 MySQL "호환"이라 **Flyway 호환을 확인하지 못했음을 DEPLOY.md에 명시**하고 Railway(진짜 MySQL)를 대안으로 제시
+- `demo` 프로필에서도 시연 초기화를 허용하되 ADMIN만(13단계 프롬프트 기준). 화면 버튼은 만들지 않았다
+- 스모크 테스트의 비밀번호는 입력받는 것이 기본이고, 자동 실행용으로만 터미널 환경변수 `SMOKE_PASSWORD`를 허용(파일 저장 없음)
+- 프롬프트 기록은 자료에서 **문장을 고치지 않고 옮기는 스크립트**로 만들었고, DB 비밀번호 값만 `[비공개]`로 가렸다. 자동 실행(`run-all.ps1`) 세션 기록은 없어 모두 대화형으로 표시. 세션 기록으로 확인하지 못한 항목은 그렇게 적었다
+- "평가 기준 5개"의 다섯 번째는 저장소에 없어(과제 안내문 원문 없음) 체크표에 "사용자 작업 필요"로 남겼다
+
+### 실행한 것과 결과
+| 항목 | 결과 |
+|---|---|
+| `gradlew test` | 136개 통과(신규: `SpaRoutingTest` 22, `DemoProfileGuardTest` 3) |
+| 테스트가 잡은 문제 | SPA용 보안 규칙을 `servletPath`로 썼더니 MockMvc에서 모든 GET이 열렸다 → `requestURI` 기준으로 수정(실제 서버에서도 안전) |
+| `scripts/build-single.ps1` | 성공: `app.jar` 58.5 MB(프론트 포함). `npm ci`가 한 번 EPERM으로 실패했으나 원인은 이전 점검에서 남은 Vite 서버가 파일을 잡고 있던 것이었고, 종료 후 성공 |
+| `demo` 프로필 jar 실행(MySQL 26.10, 빈 DB) | 비밀번호 없이 → 시작 실패 + 한국어 안내 / 설정하면 시작 성공, 14건·계정 3개 생성, 재시작 시 중복 생성 없음 |
+| `scripts/smoke-test.ps1 -BaseUrl http://localhost:8080` | 14 통과 / 0 실패 |
+| 헤드리스 Chrome으로 `http://localhost:8080`의 화면 경로 5개 직접 열기 | 모두 렌더링, 콘솔 오류 없음 |
+| 회귀(dev 프로필): MySQL 점검 stage12 / 11 / 10 / 7~9 | 28 / 29 / 91 / 33 통과 |
+| 회귀: `node scripts/browser/flows.mjs` | 36단계 통과 |
+| 비밀값 점검(git 이력 11개 커밋 전체, 작업 트리) | 키·토큰 패턴 없음, DB 비밀번호 값 없음, `.env` 추적 없음, 초기 `.env.example`의 자리표시자("your-secret-key-here")만 있음. 가상 전화번호만 있음 |
+
+### 실행하지 못한 것
+- **`docker build`·`docker compose up`**: 이 PC에 Docker가 없다(`docker: command not found`). Dockerfile·compose의 문법과 구성은 점검하지 못했고, 같은 단계를 Gradle(`build-single.ps1`)로 대신 확인했다
+- Render·TiDB Cloud 배포, 배포 주소에 대한 스모크 테스트(`docs/DEPLOY_URL.txt` 없음) → "배포 확인 대기"
+- TiDB에서의 Flyway 동작, Render에서의 실제 이미지 빌드
+
+### 사용자가 직접 해야 할 일
+1. 배포 플랫폼 가입·환경변수 입력·배포(`docs/DEPLOY.md` 4번), 시연 계정 비밀번호 정하기(제출 때 따로 전달)
+2. Kakao 허용 도메인에 배포 주소 추가(지도를 쓸 때)
+3. GitHub 저장소 공개/비공개 결정
+4. 배포 후 `docs/DEPLOY_URL.txt` 작성 → 스모크 테스트 결과를 DEPLOY.md에 기록
+5. 과제 안내문의 다섯 번째 평가 기준 확인(`docs/SUBMISSION.md` 체크표)
+
+### 남은 문제
+- 무료 플랫폼의 잠자기·업로드 사진 소실, 서버 한 대 기준 중복 제출 방지, 시연 초기화 화면 버튼 없음(요청에 따라 제외)

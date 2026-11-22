@@ -1,0 +1,32 @@
+# Render Blueprint: 단일 Docker 웹 서비스(프론트 포함). 비밀값은 여기에 적지 않고 Render 대시보드에서 직접 입력한다(sync: false).
+# MySQL 호환 DB는 Render가 제공하지 않아 외부 DB(예: TiDB Cloud Starter)를 쓴다. 자세한 순서는 docs/DEPLOY.md.
+services:
+  - type: web
+    name: thats-mine
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/v1/categories
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: demo
+      - key: DB_HOST
+        sync: false
+      - key: DB_PORT
+        value: "4000"
+      - key: DB_NAME
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      # 관리형 DB의 TLS 연결 옵션(예: TiDB Cloud Starter는 TLS 필수)
+      - key: DB_OPTIONS
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: DEMO_ACCOUNT_PASSWORD
+        sync: false
+      # Kakao JavaScript 키(선택). 빌드 때 이미지에 들어간다. 비워 두면 지도 대신 대체 화면.
+      - key: VITE_KAKAO_MAP_KEY
+        sync: false

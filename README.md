@@ -71,6 +71,8 @@
 │  ├─ public/demo-photos/    과업 B용 예시 사진
 │  └─ .env.example           프론트 환경변수 예시
 ├─ scripts/browser/          헤드리스 Chrome 점검(audit.mjs 화면 점검, flows.mjs 과업 A·B 수행)
+├─ scripts/                  smoke-test.ps1(배포 스모크 테스트), build-single.ps1(프론트 포함 단일 jar)
+├─ Dockerfile, docker-compose.yml, render.yaml, .env.example   배포(단일 서비스)
 └─ docs/                     SPEC, 설계 근거, API.md, ERD.md, 진행·테스트 기록, 스크린샷
 ```
 
@@ -151,6 +153,10 @@ $login = Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/v1/auth/l
 Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/v1/dev/reset-demo -Headers @{ Authorization = "Bearer $($login.data.accessToken)" }
 ```
 
+### 단일 서비스로 실행·배포
+
+프론트 빌드 결과를 Spring Boot가 함께 제공해 **주소 하나**로 동작합니다. Docker가 있으면 `.env.example`을 `.env`로 복사해 비밀값을 채운 뒤 `docker compose up --build`(→ http://localhost:8080). Docker가 없으면 `scriptsuild-single.ps1`로 `app.jar`를 만들어 `demo` 프로필로 실행합니다. 배포 방법과 한계는 [`docs/DEPLOY.md`](docs/DEPLOY.md).
+
 ## 8. 테스트 계정 (dev 프로필 전용)
 
 | 계정 | 역할 | 비밀번호 |
@@ -182,6 +188,8 @@ Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/v1/dev/reset-demo 
 | [`docs/DESIGN_RATIONALE.md`](docs/DESIGN_RATIONALE.md) | 연구 인사이트 ↔ 설계 결정 추적표 |
 | [`docs/USABILITY_TEST_READY.md`](docs/USABILITY_TEST_READY.md) | 과업 A·B 진행 스크립트와 빈 기록지(사용성 테스트는 아직 수행하지 않음) |
 | [`docs/API.md`](docs/API.md), [`docs/ERD.md`](docs/ERD.md) | REST API 명세, ERD(Mermaid) |
+| [`docs/DEPLOY.md`](docs/DEPLOY.md) | 배포 안내(Render + TiDB Cloud 추천, 환경변수, 한계, 검증 기록). 배포는 사용자 작업이라 현재 "배포 확인 대기" |
+| [`docs/SUBMISSION.md`](docs/SUBMISSION.md), [`docs/PROMPT_HISTORY.md`](docs/PROMPT_HISTORY.md) | 제출용 요약·체크표, 개발 과정의 프롬프트 기록 |
 | [`docs/PROGRESS.md`](docs/PROGRESS.md) | 단계별 구현·결정·발견한 문제와 수정 기록 |
 
 MySQL에 서버를 띄운 뒤 쓰는 점검 스크립트:
@@ -211,4 +219,4 @@ node scripts/browser/audit.mjs                         # 22개 화면(없는 주
 - 유사 물품 추천의 정확도는 검증하지 않았습니다(시연 데이터 몇 건의 순위만 확인). 동의어 사전은 20여 개입니다.
 - 알림(푸시·이메일), 학교 시스템 연동, 자동 소유 판정, 배송은 범위 밖입니다(제안서 §4).
 - 테스트는 MySQL 8.4 LTS가 아니라 로컬 MySQL 26.10에서 실행했습니다.
-- 배포와 GitHub 공유는 13단계 범위입니다.
+- 배포는 아직 하지 않았습니다(사용자 작업). Docker 이미지 빌드·`docker compose`는 이 PC에 Docker가 없어 실행해 보지 못했고, 단일 jar(프론트 포함)로 대신 확인했습니다([`docs/DEPLOY.md`](docs/DEPLOY.md)).

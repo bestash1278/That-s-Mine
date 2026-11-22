@@ -1,0 +1,18 @@
+# 이미지 빌드에 필요 없는 것(비밀값·로그·빌드 결과·의존성 폴더)
+.git
+.gitignore
+.env
+.env.*
+!.env.example
+**/node_modules
+**/dist
+backend/build
+backend/.gradle
+backend/uploads
+backend/logs
+logs
+docs
+prompts
+scripts
+*.md
+!frontend/public/demo-photos/README.md

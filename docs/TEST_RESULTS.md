@@ -160,3 +160,21 @@
 | `node scripts/browser/flows.mjs` | 36단계 통과 |
 
 한계: 중복 제출 방지는 서버 한 대 기준이다. 화면에서 중복 제출 거절 메시지(409)가 보이는 모습은 브라우저로 확인하지 않았다(서버 응답과 기존 오류 표시 코드로만 확인).
+
+## 13단계 — 배포 형태 검증 (2026-11-22)
+
+| 명령 | 결과 |
+|---|---|
+| `backend: .\gradlew.bat test` | **136개 통과**, 실패 0 (이전 111 + `SpaRoutingTest` 22 + `DemoProfileGuardTest` 3) |
+| `scripts\build-single.ps1` (`npm ci` + `npm run build` + `gradlew bootJar -PwithFrontend`) | 성공, `app.jar` 58.5 MB(프론트 포함) |
+| `demo` 프로필로 jar 실행, `DEMO_ACCOUNT_PASSWORD` 없이 | 시작 실패 + 한국어 안내(환경변수 이름 포함) |
+| `demo` 프로필로 jar 실행(MySQL 26.10, 빈 DB), 비밀번호 설정 | 시작 성공, Flyway V1~V4 적용, 시연 데이터 물품 14건·계정 3개 생성. 재시작하면 건수 그대로(중복 생성 안 함) |
+| `scripts\smoke-test.ps1 -BaseUrl http://localhost:8080` | **14 통과 / 0 실패** |
+| 헤드리스 Chrome으로 `http://localhost:8080` `/`, `/items`, `/items/1`, `/map`, `/login` | 모두 렌더링(화면 제목 포함), 콘솔 오류 없음 |
+| 비회원 `POST /api/v1/dev/reset-demo`(demo 프로필) | 401 |
+| 회귀(dev 프로필): `mysql_api_check_stage12 / 11 / 10 / 7_9` | 28 / 29 / 91 / 33 통과 |
+| 회귀: `node scripts/browser/flows.mjs` | 36단계 통과 |
+
+테스트가 잡은 문제: SPA 화면 경로를 열어 두는 보안 규칙을 `getServletPath()`로 썼더니 MockMvc(서블릿 경로가 빈 값)에서 **모든 GET이 인증 없이 열렸다**(`AuthApiTest.adminOnly` 실패로 발견). `getRequestURI()` 기준으로 고쳐 통과.
+
+실행하지 못한 것: `docker build`·`docker compose up`(이 PC에 Docker 없음), Render·TiDB Cloud 배포와 Flyway 동작, 배포 주소에 대한 스모크 테스트(배포 주소 없음 → "배포 확인 대기"). 자세한 내용은 `docs/DEPLOY.md` 7번.

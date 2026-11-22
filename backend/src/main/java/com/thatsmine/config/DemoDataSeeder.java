@@ -31,7 +31,7 @@ import java.util.Map;
  * - 카테고리와 검색 동의어는 Flyway(V1, V2)가 넣는다.
  */
 @Component
-@Profile("dev")
+@Profile({"dev", "demo"})
 @RequiredArgsConstructor
 public class DemoDataSeeder {
 

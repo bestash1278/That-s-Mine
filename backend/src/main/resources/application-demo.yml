@@ -1,0 +1,20 @@
+# 배포 시연용 프로필: --spring.profiles.active=demo
+# - 운영(기본) 프로필과 같은 설정을 쓰고(JWT_SECRET 필수, SQL 로그 끔), 시연 데이터만 DB가 비어 있을 때 만든다.
+# - 시연 계정 비밀번호는 환경변수 DEMO_ACCOUNT_PASSWORD로만 받는다(기본값 없음, 없으면 시작 실패 — DemoProfileGuard).
+# - DB·업로드 폴더는 환경변수(DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD, DB_OPTIONS, UPLOAD_DIR)로 지정한다.
+spring:
+  jpa:
+    show-sql: false
+  h2:
+    console:
+      enabled: false
+
+demo:
+  account-password: ${DEMO_ACCOUNT_PASSWORD:}
+
+logging:
+  level:
+    root: INFO
+    com.thatsmine: INFO
+  file:
+    name: ${LOG_FILE:logs/thatsmine.log}
