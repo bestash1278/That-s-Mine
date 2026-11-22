@@ -1,10 +1,13 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
+import ConfirmDialog from '../common/ConfirmDialog.jsx';
 import StatusBadge from '../common/StatusBadge.jsx';
 import ListShell from './ListShell.jsx';
 import Thumb from './Thumb.jsx';
 import { usePagedList } from './usePagedList.js';
+import { toUserError } from '../../api/client.js';
 import { getMyReturnRequests } from '../../api/me.js';
+import { cancelReturnRequest } from '../../api/returnRequests.js';
 import { formatDate } from '../../utils/dateUtils.js';
 
 /** 상태별로 다음에 할 일을 짧게 안내 */
@@ -16,11 +19,38 @@ const NEXT_STEP = {
   CANCELLED: '신청을 취소했어요.',
 };
 
-/** 반환 신청 내역 (조회만. 신청·취소는 10단계) */
-export default function MyReturnRequestList() {
+/** 반환 신청 내역. 신청 대기 중인 신청은 취소할 수 있다(승인된 신청은 관리 부서에 문의). */
+export default function MyReturnRequestList({ onNotice }) {
   const list = usePagedList(useCallback((page, size) => getMyReturnRequests(page, size), []));
+  const [target, setTarget] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  const close = () => {
+    if (busy) return;
+    setTarget(null);
+    setError('');
+  };
+
+  const confirmCancel = async () => {
+    if (busy || !target) return;
+    setBusy(true);
+    setError('');
+    try {
+      await cancelReturnRequest(target.requestId);
+      onNotice?.(`'${target.itemTitle}' 반환 신청을 취소했어요.`);
+      setTarget(null);
+      list.reload();
+    } catch (err) {
+      setError(toUserError(err, '신청을 취소하지 못했습니다. 잠시 후 다시 시도해 주세요.').message);
+      list.reload(); // 그 사이 상태가 바뀌었을 수 있다
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
+    <>
     <ListShell
       list={list}
       emptyMessage="아직 반환 신청한 물품이 없어요. 내 물건을 찾으면 상세 화면에서 반환을 신청할 수 있어요."
@@ -55,6 +85,15 @@ export default function MyReturnRequestList() {
               <p className="whitespace-pre-line rounded bg-blue-50 p-2 text-text">{request.ownershipDescription}</p>
             </details>
           )}
+          {request.status === 'PENDING' && (
+            <button
+              type="button"
+              onClick={() => setTarget(request)}
+              className="inline-flex min-h-[44px] w-full items-center justify-center rounded border-2 border-error px-3 text-sm font-medium text-error hover:bg-red-50"
+            >
+              신청 취소
+            </button>
+          )}
           {request.itemViewable ? (
             <Link
               to={`/items/${request.itemId}`}
@@ -68,5 +107,18 @@ export default function MyReturnRequestList() {
         </li>
       ))}
     </ListShell>
+    <ConfirmDialog
+        isOpen={Boolean(target)}
+        title="반환 신청을 취소할까요?"
+        message={target ? `'${target.itemTitle}' 신청을 취소해도 다시 신청할 수 있어요. 담당자가 이미 확인 중이라면 처리 결과가 달라질 수 있어요.` : ''}
+        confirmLabel="신청 취소"
+        cancelLabel="닫기"
+        danger
+        busy={busy}
+        error={error}
+        onConfirm={confirmCancel}
+        onCancel={close}
+      />
+    </>
   );
 }

@@ -135,6 +135,15 @@ public class LostReportService {
                 .toList();
     }
 
+    /** 관리자 목록: 모든 분실 신고(모든 상태, 삭제 제외). 키워드·상태로 거를 수 있다 */
+    @Transactional(readOnly = true)
+    public PageResponse<LostReportSummaryDTO> getAdminReports(String keyword, String status, int page, int size) {
+        String kw = keyword == null || keyword.isBlank() ? null : keyword.trim();
+        Pageable pageable = PageRequest.of(Math.max(page, 0), clampSize(size), Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<LostReport> result = lostReportRepository.searchForAdmin(kw, parseStatus(status), pageable);
+        return PageResponse.from(result.map(r -> LostReportSummaryDTO.from(r, getThumbnailUrl(r.getReportId()))));
+    }
+
     /** 마이페이지: 내 분실 신고 (모든 상태) */
     @Transactional(readOnly = true)
     public PageResponse<LostReportSummaryDTO> getMyLostReports(Long userId, int page, int size) {

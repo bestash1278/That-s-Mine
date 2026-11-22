@@ -36,6 +36,14 @@ public class CampusBuilding {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    /** 관리자 수정. 좌표는 설정값이므로 서비스에서 범위를 검증한 뒤 호출한다. */
+    public void update(String buildingName, BigDecimal latitude, BigDecimal longitude, String description) {
+        this.buildingName = buildingName;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.description = description;
+    }
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

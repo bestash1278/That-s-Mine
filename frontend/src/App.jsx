@@ -17,6 +17,8 @@ import ReportLostCompletePage from './pages/ReportLostCompletePage.jsx';
 import LostReportDetailPage from './pages/LostReportDetailPage.jsx';
 import EditLostReportPage from './pages/EditLostReportPage.jsx';
 import EditFoundItemPage from './pages/EditFoundItemPage.jsx';
+import ReturnRequestPage from './pages/ReturnRequestPage.jsx';
+import AdminPage from './pages/AdminPage.jsx';
 import { AuthProvider } from './contexts/AuthContext.jsx';
 import { ReportFoundDraftProvider } from './contexts/ReportFoundDraftContext.jsx';
 
@@ -60,11 +62,11 @@ function App() {
             <Route path="/mypage/lost-reports/:id/edit" element={protect(<EditLostReportPage />)} />
             <Route
               path="/return-request/:id"
-              element={protect(<ComingSoonPage title="반환 신청" />, { reason: '반환을 신청하려면 로그인해 주세요.' })}
+              element={protect(<ReturnRequestPage />, { reason: '반환을 신청하려면 로그인해 주세요. 로그인하면 신청 화면으로 돌아갑니다.' })}
             />
 
             {/* 관리자 */}
-            <Route path="/admin" element={protect(<ComingSoonPage title="관리자 페이지" />, { requireAdmin: true })} />
+            <Route path="/admin" element={protect(<AdminPage />, { requireAdmin: true })} />
 
             <Route path="*" element={<ComingSoonPage title="페이지를 찾을 수 없습니다" />} />
           </Routes>

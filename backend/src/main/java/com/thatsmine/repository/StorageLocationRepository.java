@@ -11,4 +11,7 @@ public interface StorageLocationRepository extends JpaRepository<StorageLocation
     List<StorageLocation> findByBuilding_BuildingIdAndActiveTrueOrderByStorageNameAsc(Long buildingId);
 
     List<StorageLocation> findByActiveTrueOrderByStorageNameAsc();
+
+    /** 관리자용: 사용 중지된 장소 포함 */
+    List<StorageLocation> findAllByOrderByStorageNameAsc();
 }

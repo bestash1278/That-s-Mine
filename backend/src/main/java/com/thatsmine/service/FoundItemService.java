@@ -365,7 +365,7 @@ public class FoundItemService {
     }
 
     /** 보관 상태·보관 장소 검증 (등록·수정 공통) */
-    private static void validateCustody(Map<String, String> errors, CustodyType custodyType, Long storageId,
+    static void validateCustody(Map<String, String> errors, CustodyType custodyType, Long storageId,
                                         String storageLocation, String storageLocationDetail,
                                         BigDecimal storageLatitude, BigDecimal storageLongitude) {
         if (custodyType == null) {
@@ -490,7 +490,7 @@ public class FoundItemService {
         return Math.min(size, MAX_PAGE_SIZE);
     }
 
-    private static String trimToNull(String value) {
+    static String trimToNull(String value) {
         if (value == null) {
             return null;
         }
@@ -498,7 +498,7 @@ public class FoundItemService {
         return trimmed.isEmpty() ? null : trimmed;
     }
 
-    private static boolean lengthOver(String value, int max) {
+    static boolean lengthOver(String value, int max) {
         return value != null && value.length() > max;
     }
 }

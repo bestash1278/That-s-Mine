@@ -108,7 +108,7 @@ export default function MyPage() {
         {active === 'profile' && <ProfileSection />}
         {active === 'found' && <MyFoundItemList onNotice={setNotice} />}
         {active === 'lost' && <MyLostReportList onNotice={setNotice} />}
-        {active === 'returns' && <MyReturnRequestList />}
+        {active === 'returns' && <MyReturnRequestList onNotice={setNotice} />}
       </section>
     </div>
   );

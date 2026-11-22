@@ -69,3 +69,17 @@ Object.assign(statusColors, {
 
 // 보관 유형은 constants/custodyTypes.js에서 관리한다(여기 있던 중복 정의는 그쪽을 다시 내보냄).
 export { CustodyType, custodyTypeLabels } from './custodyTypes.js';
+
+// 관리자 화면: 습득물 처리 상태를 바꾸는 버튼 이름과 확인 문구 (서버가 허용한 상태만 버튼으로 보인다)
+export const itemStatusActionLabels = {
+  REPORTED: '신고 접수로 되돌리기',
+  STORED: '보관 중으로 변경',
+  HIDDEN: '숨김 처리',
+};
+
+// 관리자 화면: 반환 신청 처리 버튼
+export const returnReviewActionLabels = {
+  APPROVED: '승인',
+  REJECTED: '반려',
+  COMPLETED: '반환 완료 처리',
+};

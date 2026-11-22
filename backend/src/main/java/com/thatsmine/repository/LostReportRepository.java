@@ -81,4 +81,14 @@ public interface LostReportRepository extends JpaRepository<LostReport, Long> {
             @Param("status") LostReportStatus status,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
+
+    /** 관리자 목록: 모든 상태(삭제 제외) */
+    @Query("SELECT l FROM LostReport l " +
+            "WHERE l.deletedAt IS NULL " +
+            "AND (:keyword IS NULL OR LOWER(l.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "     OR LOWER(l.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "AND (:status IS NULL OR l.status = :status)")
+    Page<LostReport> searchForAdmin(@Param("keyword") String keyword,
+                                    @Param("status") LostReportStatus status,
+                                    Pageable pageable);
 }

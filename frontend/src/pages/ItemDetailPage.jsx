@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import { MapPin, Archive, AlertCircle, Phone, Clock, FileText, ArrowLeft } from 'lucide-react';
 import Button from '../components/common/Button.jsx';
 import Card from '../components/common/Card.jsx';
@@ -10,6 +10,8 @@ import LoadingState from '../components/common/LoadingState.jsx';
 import ErrorState from '../components/common/ErrorState.jsx';
 import client from '../api/client.js';
 import { FoundItemStatus } from '../constants/status.js';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { getReturnEligibility } from '../api/returnRequests.js';
 
 export default function ItemDetailPage() {
   const { id } = useParams();
@@ -19,6 +21,9 @@ export default function ItemDetailPage() {
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { isAuthenticated } = useAuth();
+  // 로그인했을 때만: 지금 반환 신청을 할 수 있는지(못 하면 이유)와 내 신청 상태
+  const [eligibility, setEligibility] = useState(null);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -38,13 +43,29 @@ export default function ItemDetailPage() {
     fetchItem();
   }, [id]);
 
+  useEffect(() => {
+    let cancelled = false;
+    setEligibility(null);
+    if (!isAuthenticated) return undefined;
+    getReturnEligibility(id)
+      .then((data) => {
+        if (!cancelled) setEligibility(data);
+      })
+      .catch(() => {
+        // 안내를 못 불러와도 신청 화면에서 서버가 다시 확인하므로 버튼은 그대로 둔다
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, isAuthenticated]);
+
   const handleBack = () => {
     const { state } = location;
     navigate(state?.from || '/items');
   };
 
   const handleReturn = () => {
-    navigate(`/return-request/${id}`);
+    navigate(`/return-request/${id}`, { state: { from: location.state?.from } });
   };
 
   if (loading) {
@@ -247,6 +268,15 @@ export default function ItemDetailPage() {
         {isReturned ? (
           <div className="bg-gray-50 p-3 rounded text-center text-sm text-sub">
             이미 반환된 물품입니다.
+          </div>
+        ) : eligibility && !eligibility.canRequest ? (
+          <div className="space-y-2 rounded bg-gray-50 p-3 text-center text-sm text-text">
+            <p>{eligibility.blockReason}</p>
+            {eligibility.myRequest && (
+              <Link to="/mypage?tab=returns" className="inline-flex min-h-[44px] items-center font-medium text-primary underline">
+                내 반환 신청 보기
+              </Link>
+            )}
           </div>
         ) : (
           <Button onClick={handleReturn} variant="primary" className="w-full">

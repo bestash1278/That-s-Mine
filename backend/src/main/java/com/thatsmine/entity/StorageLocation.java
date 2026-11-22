@@ -55,6 +55,22 @@ public class StorageLocation {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    /** 관리자 수정(서비스에서 검증 후 호출) */
+    public void update(CampusBuilding building, String storageName, BigDecimal latitude, BigDecimal longitude,
+                       String detailLocation, String description, String contactPhone, String operatingHours,
+                       String pickupGuide, boolean active) {
+        this.building = building;
+        this.storageName = storageName;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.detailLocation = detailLocation;
+        this.description = description;
+        this.contactPhone = contactPhone;
+        this.operatingHours = operatingHours;
+        this.pickupGuide = pickupGuide;
+        this.active = active;
+    }
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

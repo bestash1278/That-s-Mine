@@ -5,7 +5,9 @@ import com.thatsmine.enums.FoundItemStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
@@ -99,4 +101,25 @@ public interface FoundItemRepository extends JpaRepository<FoundItem, Long> {
     // 정렬은 Pageable(createdAt DESC)로 지정한다.
     @Query("SELECT f FROM FoundItem f WHERE f.deletedAt IS NULL AND f.status <> :excludedStatus")
     Page<FoundItem> findRecentNotDeleted(@Param("excludedStatus") FoundItemStatus excludedStatus, Pageable pageable);
+    /**
+     * 반환 신청·상태 변경처럼 같은 물품을 동시에 바꾸면 안 되는 작업용. 행 잠금(SELECT ... FOR UPDATE)을 걸어
+     * 한 번에 한 요청만 처리하게 한다(중복 반환 방지).
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT f FROM FoundItem f WHERE f.deletedAt IS NULL AND f.itemId = :itemId")
+    Optional<FoundItem> findByIdForUpdate(@Param("itemId") Long itemId);
+
+    /** 관리자 목록: 숨김 포함 모든 상태(삭제 제외). 비공개 특징·보관 장소도 검색 대상이다. */
+    @Query("SELECT f FROM FoundItem f " +
+            "WHERE f.deletedAt IS NULL " +
+            "AND (:keyword IS NULL OR LOWER(f.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "     OR LOWER(f.description) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "     OR LOWER(f.privateFeatures) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "     OR LOWER(f.foundLocation) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "AND (:status IS NULL OR f.status = :status) " +
+            "AND (:categoryId IS NULL OR f.category.categoryId = :categoryId)")
+    Page<FoundItem> searchForAdmin(@Param("keyword") String keyword,
+                                   @Param("status") FoundItemStatus status,
+                                   @Param("categoryId") Long categoryId,
+                                   Pageable pageable);
 }

@@ -40,7 +40,7 @@ export default function Modal({ isOpen, title, children, onClose }) {
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         tabIndex={-1}
-        className="mx-4 w-full max-w-md rounded-lg bg-card shadow-lg focus:outline-none"
+        className="mx-4 max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-card shadow-lg focus:outline-none"
       >
         {title && (
           <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">

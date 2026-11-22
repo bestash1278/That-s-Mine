@@ -45,6 +45,15 @@ public class ReturnRequest {
 
     private LocalDateTime processedAt;
 
+    /** 상태 변경. 허용 여부는 서비스(ReturnPolicy)에서 먼저 검증한다. */
+    public void changeStatus(ReturnRequestStatus next, String reviewComment) {
+        this.status = next;
+        if (reviewComment != null) {
+            this.reviewComment = reviewComment;
+        }
+        this.processedAt = LocalDateTime.now();
+    }
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

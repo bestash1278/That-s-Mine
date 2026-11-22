@@ -133,6 +133,21 @@ public class FoundItem {
         this.storageLongitude = handedOver ? storageLongitude : null;
     }
 
+    /** 처리 상태 변경(관리자·반환 신청 처리). 허용 여부는 서비스에서 먼저 검증한다. */
+    public void changeStatus(FoundItemStatus next) {
+        this.status = next;
+    }
+
+    /** 관리자가 잘못 입력된 발견 위치를 바로잡는다. */
+    public void updateFoundLocation(CampusBuilding foundBuilding, String foundLocation, String foundLocationDetail,
+                                    BigDecimal foundLatitude, BigDecimal foundLongitude) {
+        this.foundBuilding = foundBuilding;
+        this.foundLocation = foundLocation;
+        this.foundLocationDetail = foundLocationDetail;
+        this.foundLatitude = foundLatitude;
+        this.foundLongitude = foundLongitude;
+    }
+
     /** Soft Delete: 행은 남기고 삭제 시각만 기록한다. 반환 신청 이력은 그대로 남는다. */
     public void softDelete() {
         this.deletedAt = LocalDateTime.now();

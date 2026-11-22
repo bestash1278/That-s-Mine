@@ -6,6 +6,7 @@ import com.thatsmine.enums.FoundItemStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
@@ -50,6 +51,14 @@ public class AdminFoundItemDTO {
     private String reporterName;
 
     private List<String> imageUrls;
+
+    /** 서버가 계산한 "지금 바꿀 수 있는 처리 상태". 화면은 이 값만 버튼으로 보여준다. */
+    @Setter
+    private List<String> allowedStatuses;
+
+    /** 처리 대기 중인 반환 신청 수 */
+    @Setter
+    private Integer pendingReturnRequests;
 
     public static AdminFoundItemDTO from(FoundItem item, List<String> imageUrls, StorageInfoDTO storageInfo) {
         String storageStatusLabel = getStorageStatusLabel(item);
