@@ -2,7 +2,7 @@
 
 교내에서 습득된 물건과 분실 신고를 한곳에서 조회하고 신고하는 **반응형 웹 앱**입니다. HCI 수업 프로젝트로 만들었고, 기능뿐 아니라 사용성·일관성·오류 예방·피드백을 함께 평가받습니다.
 
-> 이 저장소의 사용자 연구 자료(`docs/223625_*.md`)의 행동·발화·수치는 **가상 사례 기반 초안**입니다. 실제 사용자 조사나 사용성 테스트는 수행하지 않았고, 이 README와 화면의 어떤 수치도 실제 조사 결과가 아닙니다. 시연 데이터(물품·계정·건물 좌표)도 모두 가상입니다.
+> 이 저장소의 사용자 연구 자료(제출 저장소에는 포함하지 않음)의 행동·발화·수치는 **가상 사례 기반 초안**입니다. 실제 사용자 조사나 사용성 테스트는 수행하지 않았고, 이 README와 화면의 어떤 수치도 실제 조사 결과가 아닙니다. 시연 데이터(물품·계정·건물 좌표)도 모두 가상입니다.
 
 ## 1. 해결하려는 문제 · 대상 사용자 · 목적
 
@@ -45,7 +45,7 @@
 |---|---|---|
 | ![추천](docs/screenshots/10-lost-detail-matches-pc.png) | ![관리자](docs/screenshots/14-admin-found-pc.png) | ![지도 대체](docs/screenshots/06-map-nokey-mobile.png) |
 
-전체 스크린샷과 점검 방법은 `docs/screenshots/`, `docs/TEST_RESULTS.md`를 보세요.
+전체 스크린샷은 `docs/screenshots/`를 보세요.
 
 ## 3. 기술 스택
 
@@ -73,7 +73,7 @@
 ├─ scripts/browser/          헤드리스 Chrome 점검(audit.mjs 화면 점검, flows.mjs 과업 A·B 수행)
 ├─ scripts/                  smoke-test.ps1(배포 스모크 테스트), build-single.ps1(프론트 포함 단일 jar)
 ├─ Dockerfile, docker-compose.yml, render.yaml, .env.example   배포(단일 서비스)
-└─ docs/                     SPEC, 설계 근거, API.md, ERD.md, 진행·테스트 기록, 스크린샷
+└─ docs/                     SPEC, API.md, ERD.md, 배포·제출 문서, 프롬프트 기록, 스크린샷
 ```
 
 ## 5. 준비물과 환경변수
@@ -176,21 +176,15 @@ Invoke-RestMethod -Method Post -Uri http://localhost:8080/api/v1/dev/reset-demo 
 3. 카카오맵 사용 설정이 필요한 경우 앱 설정에서 켭니다(메뉴 이름은 바뀔 수 있으니 공식 안내를 확인하세요).
 4. `frontend/.env`의 `VITE_KAKAO_MAP_KEY`에 키를 넣고 `npm run dev`를 다시 시작합니다.
 
-키 값은 저장소에 올리지 마세요(`frontend/.env`는 `.gitignore` 대상). 이 환경에서는 키가 없어 **실제 지도 화면 동작은 확인하지 못했습니다**(`docs/VERIFICATION_CHECKLIST.md` 8·9번).
+키 값은 저장소에 올리지 마세요(`frontend/.env`는 `.gitignore` 대상). 이 환경에서는 키가 없어 **실제 지도 화면 동작은 확인하지 못했습니다**.
 
 ## 10. 검증 · 문서
 
 | 문서 | 내용 |
 |---|---|
-| [`docs/TEST_RESULTS.md`](docs/TEST_RESULTS.md) | 실제 실행한 명령과 결과(통과·실패 개수), 실행하지 못한 것 |
-| [`docs/VERIFICATION_CHECKLIST.md`](docs/VERIFICATION_CHECKLIST.md) | SPEC §27의 20개 검증 항목별 근거와 수동 확인 절차 |
-| [`docs/REQUIREMENTS_TRACE.md`](docs/REQUIREMENTS_TRACE.md) | 기획 문서·SPEC 요구사항 ↔ 구현 화면·파일·상태 |
-| [`docs/DESIGN_RATIONALE.md`](docs/DESIGN_RATIONALE.md) | 연구 인사이트 ↔ 설계 결정 추적표 |
-| [`docs/USABILITY_TEST_READY.md`](docs/USABILITY_TEST_READY.md) | 과업 A·B 진행 스크립트와 빈 기록지(사용성 테스트는 아직 수행하지 않음) |
 | [`docs/API.md`](docs/API.md), [`docs/ERD.md`](docs/ERD.md) | REST API 명세, ERD(Mermaid) |
 | [`docs/DEPLOY.md`](docs/DEPLOY.md) | 배포 안내(Render + TiDB Cloud 추천, 환경변수, 한계, 검증 기록). 배포는 사용자 작업이라 현재 "배포 확인 대기" |
 | [`docs/SUBMISSION.md`](docs/SUBMISSION.md), [`docs/PROMPT_HISTORY.md`](docs/PROMPT_HISTORY.md) | 제출용 요약·체크표, 개발 과정의 프롬프트 기록 |
-| [`docs/PROGRESS.md`](docs/PROGRESS.md) | 단계별 구현·결정·발견한 문제와 수정 기록 |
 
 MySQL에 서버를 띄운 뒤 쓰는 점검 스크립트:
 

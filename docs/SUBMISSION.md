@@ -12,7 +12,7 @@
 
 ## 2. 사용자 요구사항 → 구현 기능 (요약)
 
-전체 표(근거 문서·절, 화면 경로, 주요 파일, 상태)는 [`REQUIREMENTS_TRACE.md`](REQUIREMENTS_TRACE.md), 설계 근거는 [`DESIGN_RATIONALE.md`](DESIGN_RATIONALE.md).
+
 
 | 요구사항(근거) | 구현 | 상태 |
 |---|---|---|
@@ -84,7 +84,7 @@ cd frontend; npm install; npm run dev                                           
 
 ## 6. 테스트 결과 (실제 실행, 2026-11-22)
 
-자세한 명령과 한계는 [`TEST_RESULTS.md`](TEST_RESULTS.md), SPEC §27 20항목은 [`VERIFICATION_CHECKLIST.md`](VERIFICATION_CHECKLIST.md).
+
 
 | 항목 | 결과 |
 |---|---|
@@ -99,7 +99,7 @@ cd frontend; npm install; npm run dev                                           
 
 ## 7. 한계와 미구현
 
-- 사람 대상 **사용성 테스트는 하지 않았다**(성공률·소요 시간 미측정). 진행 준비물은 [`USABILITY_TEST_READY.md`](USABILITY_TEST_READY.md).
+- 사람 대상 **사용성 테스트는 하지 않았다**(성공률·소요 시간 미측정).
 - **Kakao 키가 없어** 실제 지도 렌더링(마커·클러스터·드래그·현재 위치)은 확인하지 못했다. 키 없는 대체 화면과 서버 API는 확인했다.
 - **배포하지 않았다**(사용자 작업). Docker 이미지 빌드·`docker compose`는 이 PC에 Docker가 없어 실행해 보지 못했고, TiDB Cloud/Render에서의 동작도 미확인이다.
 - 실제 스마트폰·스크린리더로는 확인하지 않았다(Chrome 화면 크기 에뮬레이션). 로컬 MySQL은 프로젝트 기준(8.4 LTS)이 아니라 26.10이다.
@@ -124,8 +124,4 @@ cd frontend; npm install; npm run dev                                           
 
 | # | 평가 기준 | 근거 파일 | 상태 |
 |---|---|---|---|
-| 1 | 기획과 구현의 일치 | [`REQUIREMENTS_TRACE.md`](REQUIREMENTS_TRACE.md), [`DESIGN_RATIONALE.md`](DESIGN_RATIONALE.md) §8 | 완료(부분 구현·미구현은 이유와 함께 표시) |
-| 2 | 주요 기능 정상 작동 | [`TEST_RESULTS.md`](TEST_RESULTS.md), [`VERIFICATION_CHECKLIST.md`](VERIFICATION_CHECKLIST.md) | 완료(지도 화면 2항목은 부분 통과) |
-| 3 | UI 완성도 | `docs/screenshots/`, [`PROGRESS.md`](PROGRESS.md) 12단계(점검 66회, 개선 16건) | 완료(실제 기기·지도 화면 미확인) |
-| 4 | 개선 과정 | [`PROGRESS.md`](PROGRESS.md) 12단계 "발견한 문제 → 원인 → 수정 → 파일" 표, 12단계 후속, [`PROMPT_HISTORY.md`](PROMPT_HISTORY.md) | 완료 |
 | 5 | (과제 안내문의 다섯 번째 평가 기준) | 저장소에는 `prompts/12.md`가 적은 네 가지(위 1~4)만 있고 안내문 원문이 없어 **다섯 번째 기준을 확인하지 못했다** | **사용자 작업 필요**: 안내문의 다섯 번째 기준을 알려 주면 이 칸에 파일·상태를 채운다 |
