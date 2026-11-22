@@ -32,7 +32,7 @@
 | 과업 | 사용자 목표 | 대응 기능·화면 | SPEC 섹션 | 성공 조건 | 시드 데이터 |
 |------|-----------|------------|---------|---------|----------|
 | **A: 찾기 (3분)** | 도서관 분실 파란색 파우치 찾기 + 보관 장소 답하기 | 조회→검색→상세→보관 위치 확인 | §8(조회), §12(상세) | 도움 없이 3분 내, 올바른 물품 + 보관 장소 정확히 답함 | 정답: "파란색 파우치"(발견:도서관, 보관:다른건물 관리부서) + 오답 후보(남색 파우치, 파란색 필통, 다른 날짜 파우치-RETURNED) |
-| **B: 신고 (5분)** | 학생회관 분실 검은색 우산 신고(날짜·장소·종류·특징 입력 후 제출) | 신고 폼 입력→예시 사진 선택→확인 화면→제출 완료 | §10(신고 페이지), 사진은 예시만 사용 | 도움 없이 5분 내, 필수 정보 정확히 입력 후 제출 완료 화면 도달 | 학생회관(건물), 우산(의류·잡화), 예시 사진 frontend/public/demo-photos/ |
+| **B: 신고 (5분)** | 학생회관에서 주운 검은색 우산 신고(날짜·장소·종류·특징 입력 후 제출 완료 화면까지) | 습득물 신고 폼 입력→예시 사진 선택→확인 화면→제출 완료 | §10(습득물 신고 페이지), 사진은 예시만 사용 | 도움 없이 5분 내, 필수 정보 정확히 입력 후 제출 완료 화면 도달 | 학생회관(건물), 우산(의류·잡화), 예시 사진 frontend/public/demo-photos/ |
 
 ---
 
@@ -50,7 +50,7 @@
 
 **해석**: 
 - 평가 과업 A, B가 핵심이므로 이를 지원하는 기능(조회·신고·보관 장소 안내)을 최우선 완성
-- 추천, 반환, 관리자 기능은 범위 외(제안서 §4 제외 범위)
+- 추천, 반환 신청, 관리자 기능은 SPEC에는 있으나 **연구 문서에는 근거가 없는 기능**이다(제안서 §4의 제외 범위는 학교 시스템 연동·소유자 자동 판정·배송·푸시 알림이다). 12단계 기준으로 모두 구현했고, 연구 근거는 없다는 점을 그대로 남긴다. 추천·반환은 소유 여부를 자동으로 판정하지 않는다
 - 지도는 위치 혼동 방지를 위해 발견/보관 위치 구분 시 필수이나, 지도 SDK 없거나 실패 시 건물 선택·직접 입력 대체 UI 필수(SPEC §23, CLAUDE.md)
 
 ---
@@ -64,8 +64,8 @@
 | **3. 보관 장소 다음 "어떻게 찾아가나"** | I03(보관 후 행동), C03 근거 | 상세 화면: 보관 장소 → 운영시간 → 문의처 → 수령 절차 순서 표시 |
 | **4. 물품 구별 정보 앞·소유 정보 숨김** | I02, 보안 규칙 | 공개: 사진·특징·날짜·장소; 비공개: 소유자명·학번·개인 연락처 |
 | **5. 검색 실패 → 신고로 이음** | I03(결과 없음), C03 근거 | 결과 없음 화면 → 분실 신고 버튼 + 검색 조건 미리 입력 |
-| **6. 동의어 사전** | M05(이어폰↔에어팟), 미구현 대상 | 범위 밖 |
-| **7. 목록 카드 정보 위치 고정** | I02(정보 구조), 일관성 | 모든 카드: 물품명 → 발견일·장소 → 보관 상태·장소 순서 고정 |
+| **6. 동의어 사전** | M05(이어폰↔에어팟) | 구현: 조회·분실 신고 검색·추천에서 `search_synonyms` 사전으로 표현 차이를 흡수. 사전 항목은 20여 개(V1·V2 시드)뿐이다 |
+| **7. 목록 카드 정보 위치 고정** | I02(정보 구조), 일관성 | 모든 카드(`ItemCard`): 사진 → 물품명·카테고리 → 발견일·장소 → 처리 상태 → 보관 장소 순서 고정(조회·홈·추천 공통) |
 | **8. 모바일 우선** | 사용 맥락(Chapter 05 §1) | 반응형 UI, 하단 내비게이션 |
 
 ---
@@ -86,7 +86,7 @@
 - ✅ 모든 연구 인사이트(I01~I03)가 SPEC 기능과 연결됨
 - ✅ 평가 과업 A, B가 대응하는 기능 명확함
 - ✅ 연구 수치는 모두 "가상"으로 표시
-- ✅ 근거 없는 기능(추천, 반환, 관리자)은 제외 범위로 명시
+- ✅ 연구 근거가 없는 기능(추천, 반환, 관리자)은 §4에 근거 없음으로 명시(구현은 했음)
 - ✅ 보안·접근성·모바일 고려사항 포함
 
 ---
@@ -95,6 +95,30 @@
 1. 습득물 조회(필터·검색)
 2. 상세 화면(사진·발견/보관 위치 명확히 구분)
 3. 보관 장소 안내(운영시간·문의처·수령 절차)
-4. 분실 신고(지도 또는 건물 선택 + 직접 입력, 평가 과업 B)
+4. 습득물 신고(지도 또는 건물 선택 + 직접 입력, 평가 과업 B). 분실 신고는 결과 없음에서 이어지는 경로(I03)
 
 나머지 기능은 위 경로가 완성된 후 순차 추가
+
+---
+
+## 8. 최종 구현 추적 (12단계 기준)
+
+"구현"은 코드가 있고 자동·브라우저 점검을 통과했다는 뜻이다. 사용자 연구로 효과를 확인한 것은 하나도 없다(연구는 가상 자료이고 사용성 테스트는 수행하지 않았다). 점검 방법은 `docs/TEST_RESULTS.md`, 전체 요구사항 대조는 `docs/REQUIREMENTS_TRACE.md`를 본다.
+
+| 근거 | 최종 구현 화면(경로) | 주요 파일 | 확인한 방법 |
+|---|---|---|---|
+| I01 통합 조회·검색 | `/`, `/items` | `frontend/src/pages/HomePage.jsx`, `ItemsPage.jsx`, `hooks/useItemSearch.js`, `utils/queryParser.js` / `backend/.../service/FoundItemService.java`, `repository/FoundItemRepository.java` | `FoundItemSearchFilterTest`, 브라우저 과업 A |
+| I02 구별 정보(사진·특징·발견 위치) | `/items/:id`, 목록·추천 카드 | `pages/ItemDetailPage.jsx`(사진 갤러리·등록일), `components/common/ItemCard.jsx`, `LocationCard.jsx`, `components/map/ItemLocationMap.jsx` | 브라우저 과업 A(발견/보관 분리 표시). 지도는 키 없이 확인 못 함 |
+| I03 보관·문의·결과 없음 → 신고 | `/items/:id`(찾아가는 방법), `/items`(결과 없음), `/report-lost` | `ItemDetailPage.jsx`, `components/common/EmptyState.jsx`, `pages/ReportLostPage.jsx`, `utils/lostReportForm.js` | 브라우저: 검색 조건이 신고 폼에 채워짐 |
+| 요구사항 1 (여러 조건 조회) | `/items` | `ItemsPage.jsx`(키워드·카테고리·발견 장소·처리 상태·정렬·날짜) | `FoundItemSearchFilterTest` 10개 |
+| 요구사항 2 (사진·특징·위치로 구별) | `/items/:id`, `/map` | `ItemDetailPage.jsx`, `pages/MapPage.jsx`, `components/map/*` | 브라우저(지도는 대체 UI만) |
+| 요구사항 3 (보관·문의·신고 연결) | `/items/:id`, `/report-lost` | `ItemDetailPage.jsx`, `ReportLostPage.jsx`, `StorageInfoDTO.java` | 브라우저 과업 A·분실 신고 |
+| 요구사항 4 (습득자 등록) | `/report-found` → `/report-found/preview` → `/report-found/complete/:id` | `pages/ReportFoundPage.jsx`, `ReportFoundPreviewPage.jsx`, `ReportFoundCompletePage.jsx`, `utils/reportFoundForm.js`, `FoundItemController.java` | 브라우저 과업 B, `FoundItemReportFlowTest` |
+| 과업 A | `/` → `/items?keyword=` → `/items/:id` | 위와 같음, 시드: `config/DemoDataSeeder.java` | `scripts/browser/flows.mjs`(자동 수행). 사람 대상 시험은 하지 않음 |
+| 과업 B | `/report-found`(로그인 필요) | 위와 같음, 예시 사진 `frontend/public/demo-photos/` | `scripts/browser/flows.mjs` |
+| 원칙 1 지도는 보조 | `/map`, 신고 폼의 지도 선택 | `hooks/useKakaoLoader.js`, `MapLocationPicker.jsx` | 키 없는 상태에서 두 과업 완료 확인 |
+| 원칙 2 발견·보관 혼동 방지 | 상세·카드·지도 범례 | `LocationCard.jsx`(빨강 MapPin / 파랑 Archive), `ItemCard.jsx`, `MapLegend.jsx` | 육안 확인. 혼동 여부는 사용성 테스트로 확인할 위험 |
+| 원칙 4·9 비공개·소유 확인 | 상세, 반환 신청, 추천 | `PublicFoundItemDTO.java`(비공개 특징 필드 없음), `AdminReturnRequestDTO.java`(관리자만), `MatchList.jsx` 안내 문구 | `FoundItemControllerTest`, `MatchScorerTest`, MySQL 점검 스크립트 |
+| 원칙 5 검색 실패 → 신고 | `/items` 결과 없음 | `ItemsPage.jsx`, `EmptyState.jsx` | 브라우저 |
+| 원칙 6 동의어 | 조회·추천 | `service/SearchSynonymService.java`, `MatchScorer.java` | `MatchScorerTest`, MySQL 점검(에어팟→이어폰) |
+| 원칙 8 모바일 우선 | 전체 | `components/layout/MobileNav.jsx`, 반응형 클래스, 모바일 상세 조건 접기(`ItemsPage.jsx`) | 375·768·1280px 점검 66회(`scripts/browser/audit.mjs`) |

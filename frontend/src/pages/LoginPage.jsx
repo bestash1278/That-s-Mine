@@ -133,7 +133,7 @@ export default function LoginPage() {
       </p>
 
       {import.meta.env.DEV && (
-        <p className="rounded bg-gray-100 p-3 text-center text-xs text-sub">
+        <p className="rounded bg-gray-100 p-3 text-center text-xs text-gray-700">
           개발 환경 시연 계정: user1@demo.local / demo1234! (관리자: admin@demo.local)
         </p>
       )}

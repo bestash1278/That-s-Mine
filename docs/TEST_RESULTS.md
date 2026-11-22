@@ -114,3 +114,34 @@
 - 추천 점수의 정확도(실제로 맞는 물건을 얼마나 잘 찾는지)는 검증하지 않았다. 시연 데이터 몇 건에 대한 순위만 확인했다
 - 브라우저(특히 375px)와 Kakao 지도 화면은 확인하지 않았다
 - 서버가 MySQL 26.10이라 프로젝트 기준(8.4 LTS)과 다르다
+
+## 12단계 최종 실행 결과 (2026-11-22)
+
+환경: Windows 11, JDK 17, Node 24, Chrome 157(헤드리스), MySQL Server 26.10(로컬 서비스, 프로젝트 기준 8.4 LTS와 다름), dev 프로필, Kakao 키 없음. 실행한 명령과 결과를 그대로 적는다.
+
+| 명령 | 결과 |
+|---|---|
+| `backend: .\gradlew.bat clean build` | BUILD SUCCESSFUL. 테스트 파일 14개, **106개 통과**, 실패 0, 오류 0, 건너뜀 0 (H2 프로필) |
+| `frontend: npm run build` | 통과(번들 500kB 초과 경고) |
+| `frontend: npm run lint` | 오류 0, 경고 16(effect 안 `setState`, 컴포넌트 외 내보내기 — 기존과 같은 종류) |
+| `frontend: npm test` | 18개 파일, **97개 통과**, 실패 0 |
+| `python backend/scripts/mysql_api_check_stage7_9.py` (MySQL 위 서버, 실제 HTTP) | 33 통과 / 0 실패 |
+| `python backend/scripts/mysql_api_check_stage10.py` | 91 통과 / 0 실패(동시 신청·승인 포함) |
+| `python backend/scripts/mysql_api_check_stage11.py` | 29 통과 / 0 실패 |
+| `python backend/scripts/check_demo_reset.py node scripts/browser/flows.mjs` | 초기화 → 흐름 수행으로 데이터 변경(분실 신고 4→5, 반환 신청 1→2) → 다시 초기화 → **같은 초기 상태 재현**(물품 14·분실 신고 4·반환 신청 1·건물 6·보관 장소 3, 이름·상태 일치) |
+| `node scripts/browser/flows.mjs` (헤드리스 Chrome 375px) | **36단계 통과 / 0 실패** |
+| `node scripts/browser/audit.mjs` (22개 화면 × 375·768·1280px = 66회) | 가로 넘침 0, 작은 터치 영역 0, 작은 입력 글자 0, 라벨 없는 입력 0, 이름 없는 버튼·링크 0, alt 없는 이미지 0, 글자 대비 4.5:1 미달 0, 포커스 표시 없음 0, 콘솔 오류 0, 5xx 응답 0 |
+
+백엔드 테스트 구성(14개 파일): AuthApiTest 10, FoundItemControllerTest 8, FoundItemSearchFilterTest 10, FoundItemMapApiTest 4, FoundItemReportFlowTest 7, LostReportApiTest 11, MyPageApiTest 8, FoundItemRepositoryTest 3, JwtTokenProviderTest 5, EditPolicyTest 5, ImagePlanTest 5, ImageTypeDetectionTest 6, MatchScorerTest 16, ReturnPolicyTest 8 (합계 106).
+
+### 수정 전 상태 (같은 점검, 같은 화면)
+첫 `audit.mjs`(66회): 글자 대비 미달 19종(최저 1.29:1), 작은 터치 영역 4종, 포커스 표시 없음 5종(날짜·시간 입력), 문서 제목 66회 모두 "frontend". 수정 내용은 `docs/PROGRESS.md` 12단계 표를 본다.
+
+### 실행하지 못했거나 한계
+- **실제 Kakao 지도 렌더링**(마커·클러스터·드래그·현재 위치·"이 지역에서 다시 검색" 버튼): 키가 없어 확인하지 못했다. 키 없는 대체 화면과 서버 API는 확인했다.
+- **사람 대상 사용성 테스트**: 하지 않았다. `flows.mjs`의 "수행 시간"은 자동화 시간이라 사용성 시간이 아니다. 목표(5명 중 4명)는 설계 목표로만 둔다.
+- **실제 스마트폰·태블릿 기기, 스크린리더**: 확인하지 않았다. 반응형은 Chrome의 화면 크기 에뮬레이션(375·768·1280px)으로 점검했다.
+- 자동 대비 검사는 배경 이미지·그라데이션 위의 글자를 건너뛴다.
+- 동시성 점검(중복 반환 방지)은 MySQL에서만 했다(H2는 행 잠금이 달라 JUnit로 검증 불가). MySQL 8.4 LTS가 아니라 26.10에서 실행했다.
+- 습득물 수정을 사진 교체와 함께 **실제 Tomcat**(MySQL 점검)으로 보내 본 것은 아니다(분실 신고의 multipart PATCH는 확인).
+- SPEC §27 항목별 근거와 수동 확인 절차는 `docs/VERIFICATION_CHECKLIST.md`에 있다(20개 중 18 통과, 2 부분 통과).

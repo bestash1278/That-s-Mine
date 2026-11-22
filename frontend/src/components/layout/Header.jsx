@@ -16,14 +16,14 @@ export default function Header() {
   const handleLogout = useLogout();
 
   const linkClass = ({ isActive }) =>
-    `inline-flex min-h-[44px] items-center border-b-2 px-1 font-medium transition-opacity hover:opacity-90 ${
+    `inline-flex min-h-[44px] min-w-[44px] items-center justify-center border-b-2 px-1 font-medium transition-opacity hover:opacity-90 ${
       isActive ? 'border-white' : 'border-transparent opacity-90'
     }`;
 
   return (
     <header className="sticky top-0 z-40 hidden bg-primary text-white lg:block">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-6 px-4 py-2">
-        <Link to="/" className="text-2xl font-bold">
+        <Link to="/" className="inline-flex min-h-[44px] items-center text-2xl font-bold">
           That&apos;s Mine
           <span className="sr-only"> 교내 분실물 조회 및 신고</span>
         </Link>
@@ -62,7 +62,7 @@ export default function Header() {
               </NavLink>
               <Link
                 to="/signup"
-                className="inline-flex min-h-[40px] items-center rounded bg-white px-3 font-medium text-primary hover:bg-blue-50"
+                className="inline-flex min-h-[44px] items-center rounded bg-white px-3 font-medium text-primary hover:bg-blue-50"
               >
                 회원가입
               </Link>

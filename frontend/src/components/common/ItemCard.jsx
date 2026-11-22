@@ -35,11 +35,11 @@ export default function ItemCard({ item, linkState, highlighted = false, onFocus
         className={`h-full cursor-pointer transition-shadow hover:shadow-lg ${highlighted ? 'ring-2 ring-accent' : ''}`}
       >
         <div className="space-y-3">
-          <div className="h-40 w-full overflow-hidden rounded bg-gray-100">
+          <div className="h-28 w-full overflow-hidden sm:h-40 rounded bg-gray-100">
             {thumb ? (
               <img src={thumb} alt={title} className="h-full w-full object-cover" />
             ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-sub">
+              <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-gray-600">
                 <ImageOff size={24} aria-hidden="true" />
                 <span className="text-xs">사진 없음</span>
               </div>

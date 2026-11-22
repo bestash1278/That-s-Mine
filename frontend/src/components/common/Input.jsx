@@ -16,11 +16,12 @@ export default function Input({
   multiline = false,
   rows = 3,
   className = '',
+  labelClassName = 'text-text',
   ...props
 }) {
   const inputId = id || name;
   const describedBy = error ? `${inputId}-error` : helperText ? `${inputId}-help` : undefined;
-  const fieldClass = `w-full min-h-[44px] px-3 py-2 text-base bg-white border rounded focus:outline-none focus:ring-2 focus:ring-primary ${
+  const fieldClass = `w-full min-h-[44px] px-3 py-2 text-base bg-white border rounded focus:outline-none focus:ring-2 focus:ring-primary focus-within:ring-2 focus-within:ring-primary ${
     error ? 'border-error' : 'border-gray-300'
   } ${className}`;
 
@@ -40,7 +41,7 @@ export default function Input({
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={inputId} className="block text-base font-medium text-text mb-2">
+        <label htmlFor={inputId} className={`block text-base font-medium mb-2 ${labelClassName}`}>
           {label}
           {required && (
             <>

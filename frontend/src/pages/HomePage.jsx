@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Search, MapPin } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ClipboardList, MapPin, PackagePlus, Search } from 'lucide-react';
 import Button from '../components/common/Button.jsx';
 import Input from '../components/common/Input.jsx';
 import Select from '../components/common/Select.jsx';
@@ -52,11 +52,12 @@ export default function HomePage() {
     navigate(`/items?categoryId=${categoryId}`);
   };
 
+  // SPEC §7 빠른 기능: 분실물 찾기, 습득물 신고하기, 분실 신고하기, 지도에서 찾기
   const quickActions = [
-    { title: '최근 습득물', description: '새로 등록된 물품 보기', icon: '📱', action: () => navigate('/items') },
-    { title: '카테고리 검색', description: '카테고리별로 찾기', icon: '🏷️', action: () => document.getElementById('category-section')?.scrollIntoView({ behavior: 'smooth' }) },
-    { title: '분실 물품 신고', description: '내가 잃어버린 물품 신고', icon: '📋', action: () => navigate('/report-lost') },
-    { title: '습득물 신고', description: '주운 물품 신고하기', icon: '✉️', action: () => navigate('/report-found') },
+    { title: '분실물 찾기', description: '등록된 습득물 조회', to: '/items', Icon: Search },
+    { title: '습득물 신고하기', description: '주운 물품 등록', to: '/report-found', Icon: PackagePlus },
+    { title: '분실 신고하기', description: '잃어버린 물품 등록', to: '/report-lost', Icon: ClipboardList },
+    { title: '지도에서 찾기', description: '발견 위치로 찾기', to: '/map', Icon: MapPin },
   ];
 
   return (
@@ -67,6 +68,7 @@ export default function HomePage() {
         <div className="space-y-3">
           <Input
             label="검색어"
+            labelClassName="text-white"
             name="keyword"
             placeholder="물품명이나 특징을 입력하세요 (예: 파란 파우치)"
             value={searchKeyword}
@@ -75,6 +77,7 @@ export default function HomePage() {
           />
           <Select
             label="카테고리"
+            labelClassName="text-white"
             name="category"
             options={CATEGORIES}
             value={selectedCategory}
@@ -83,28 +86,26 @@ export default function HomePage() {
             className="bg-white text-text"
           />
           <div className="flex gap-2">
-            <Button onClick={handleSearch} variant="secondary" className="flex-1">
+            <Button onClick={handleSearch} variant="secondary" className="flex-1 px-2 !bg-white !text-primary hover:!bg-blue-50">
               <Search size={18} className="mr-2" /> 검색
             </Button>
-            <Button onClick={() => navigate('/map')} variant="secondary" className="flex-1">
-              <MapPin size={18} className="mr-2" /> 지도에서 찾기
+            <Button onClick={() => navigate('/map')} variant="secondary" className="flex-1 px-2 whitespace-nowrap border-2 border-white !bg-transparent !text-white hover:!bg-white/10">
+              <MapPin size={18} className="mr-2" aria-hidden="true" /> 지도로 찾기
             </Button>
           </div>
         </div>
       </section>
 
-      {/* 빠른 기능 카드 4개 */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {quickActions.map((action, idx) => (
-          <Card
-            key={idx}
-            className="hover:shadow-lg transition-shadow cursor-pointer text-center py-6"
-            onClick={action.action}
-          >
-            <div className="text-4xl mb-2">{action.icon}</div>
-            <h3 className="font-bold text-text mb-1">{action.title}</h3>
-            <p className="text-xs text-sub">{action.description}</p>
-          </Card>
+      {/* 빠른 기능 카드 4개 (링크라서 키보드로도 이동할 수 있다) */}
+      <section aria-label="빠른 기능" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {quickActions.map(({ title, description, to, Icon }) => (
+          <Link key={to} to={to} className="block rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+            <Card className="h-full text-center py-6 hover:shadow-lg transition-shadow">
+              <Icon size={32} className="mx-auto mb-2 text-primary" aria-hidden="true" />
+              <h3 className="font-bold text-text mb-1">{title}</h3>
+              <p className="text-sm text-sub">{description}</p>
+            </Card>
+          </Link>
         ))}
       </section>
 

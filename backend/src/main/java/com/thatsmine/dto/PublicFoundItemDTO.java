@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -55,6 +56,9 @@ public class PublicFoundItemDTO {
 
     private List<String> imageUrls;
 
+    /** 시스템에 등록된 날짜 (SPEC §12 물품 정보) */
+    private LocalDateTime createdAt;
+
     public static PublicFoundItemDTO from(FoundItem item, List<String> imageUrls, StorageInfoDTO storageInfo) {
         String storageStatusLabel = getStorageStatusLabel(item);
         String storageName = getStorageName(item, storageInfo);
@@ -95,6 +99,7 @@ public class PublicFoundItemDTO {
                 .storageStatusLabel(storageStatusLabel)
                 .storageName(storageName)
                 .imageUrls(imageUrls)
+                .createdAt(item.getCreatedAt())
                 .build();
     }
 

@@ -10,7 +10,7 @@ export default function LocationCard({ icon: Icon, color = 'text-primary', title
           {Icon && <Icon size={20} className={color} />}
           <h3 className="font-bold text-text">{title}</h3>
         </div>
-        <div className="text-sm text-text space-y-2">
+        <div className="text-sm text-text space-y-2 [&_.text-sub]:text-gray-600">
           {children}
         </div>
       </div>

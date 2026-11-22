@@ -25,6 +25,7 @@ import java.util.function.Function;
  *   <li>날짜 유사도 15점 (분실 기간 안에 발견되면 만점, 기간이 끝난 뒤 14일에 걸쳐 0점으로)</li>
  * </ul>
  * 발견 날짜가 분실 시작일보다 빠르거나(논리적으로 맞지 않음), 반환 완료·숨김 물품은 대상에서 제외한다.
+ * 또한 이름·특징이 전혀 겹치지 않고 잃어버린 곳과도 멀면(종류와 날짜만 맞으면) 점수가 높아도 추천하지 않는다.
  * 습득자의 비공개 특징(private_features)은 점수에 쓰지 않는다. 순위나 점수로 비공개 특징이 추측되지 않게 하기 위해서다.
  * 점수는 "비슷한 정도"이지 소유 여부의 판정이 아니다.
  */
@@ -96,6 +97,12 @@ public final class MatchScorer {
             reasons.add("분실 기간 안에 발견됐어요");
         } else if (date > 0) {
             reasons.add("분실 기간이 끝난 직후에 발견됐어요");
+        }
+
+        // 종류와 날짜만 맞는 물품(예: 파우치를 잃어버렸는데 같은 '의류·잡화'인 우산)은 추천하지 않는다.
+        // 이름·특징이 조금이라도 겹치거나 잃어버린 곳과 가까워야 한다.
+        if (text == 0 && location < LOCATION_POINTS / 2) {
+            return null;
         }
 
         int total = category + text + location + date;

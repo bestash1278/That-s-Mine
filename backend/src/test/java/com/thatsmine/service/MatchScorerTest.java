@@ -185,4 +185,13 @@ class MatchScorerTest {
         List<MatchService.Scored> ranked = MatchService.rank(report, List.of(weaker, best, same), NO_SYNONYMS);
         assertThat(ranked).extracting(s -> s.item().getItemId()).containsExactly(2L, 1L, 3L);
     }
+    @Test
+    void 종류와_날짜만_맞고_이름과_위치가_다르면_추천하지_않는다() {
+        // 같은 '의류·잡화', 분실 기간 안에 발견됐지만 이름·특징이 겹치지 않고 위치도 멀다 → 45점이어도 제외
+        FoundItem umbrella = found().title("검은색 우산").description("검은색 장우산").foundBuilding(veryFar).build();
+        assertThat(MatchScorer.score(lost().build(), umbrella, NO_SYNONYMS)).isNull();
+        // 같은 조건이라도 가까운 곳에서 발견됐다면 후보가 된다(위치가 단서)
+        FoundItem nearby = found().title("검은색 우산").description("검은색 장우산").foundBuilding(library).build();
+        assertThat(MatchScorer.score(lost().build(), nearby, NO_SYNONYMS)).isNotNull();
+    }
 }

@@ -1,7 +1,17 @@
+import { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import Header from './Header';
 import MobileNav from './MobileNav';
+import { pageTitle } from '../../utils/pageTitle.js';
 
 export default function Layout({ children }) {
+  const { pathname } = useLocation();
+
+  // 화면을 옮길 때마다 문서 제목을 바꾼다
+  useEffect(() => {
+    document.title = pageTitle(pathname);
+  }, [pathname]);
+
   return (
     <div className="bg-bg min-h-screen">
       <Header />

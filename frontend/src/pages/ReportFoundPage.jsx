@@ -141,7 +141,7 @@ export default function ReportFoundPage() {
       <div>
         <h1 className="text-2xl font-bold text-text">습득물 신고</h1>
         <p className="mt-1 text-sm text-sub">
-          주운 물건의 정보를 입력해 주세요. <span className="text-error">*</span> 표시는 꼭 입력해야 하는 항목이에요.
+          주운 물건의 정보를 입력해 주세요. <span className="text-red-700">*</span> 표시는 꼭 입력해야 하는 항목이에요.
         </p>
       </div>
 

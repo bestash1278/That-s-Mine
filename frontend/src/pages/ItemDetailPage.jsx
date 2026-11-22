@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import { MapPin, Archive, AlertCircle, Phone, Clock, FileText, ArrowLeft } from 'lucide-react';
+import { formatDate } from '../utils/dateUtils.js';
 import Button from '../components/common/Button.jsx';
 import Card from '../components/common/Card.jsx';
 import LocationCard from '../components/common/LocationCard.jsx';
@@ -24,6 +25,8 @@ export default function ItemDetailPage() {
   const { isAuthenticated } = useAuth();
   // 로그인했을 때만: 지금 반환 신청을 할 수 있는지(못 하면 이유)와 내 신청 상태
   const [eligibility, setEligibility] = useState(null);
+  // 추가 사진이 있으면 작은 사진을 눌러 크게 본다
+  const [photoIndex, setPhotoIndex] = useState(0);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -88,6 +91,7 @@ export default function ItemDetailPage() {
     status,
     statusLabel,
     imageUrls = [],
+    createdAt,
     storageInfo,
     custodyType,
   } = item;
@@ -97,17 +101,36 @@ export default function ItemDetailPage() {
   const isTemporary = custodyType === 'TEMPORARY';
 
   return (
-    <div className="space-y-6 pb-24 lg:pb-6">
+    <div className="space-y-6 pb-52 lg:pb-6">
       {/* 상단 정보 */}
       <div className="space-y-4">
-        {/* 사진 갤러리 */}
+        {/* 사진: 대표 사진 + 추가 사진 */}
         {imageUrls && imageUrls.length > 0 && (
-          <div className="w-full h-64 bg-gray-200 rounded-lg overflow-hidden">
-            <img
-              src={imageUrls[0]}
-              alt={title}
-              className="w-full h-full object-cover"
-            />
+          <div className="space-y-2">
+            <div className="w-full h-64 bg-gray-200 rounded-lg overflow-hidden">
+              <img
+                src={imageUrls[Math.min(photoIndex, imageUrls.length - 1)]}
+                alt={`${title} 사진 ${Math.min(photoIndex, imageUrls.length - 1) + 1}/${imageUrls.length}`}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {imageUrls.length > 1 && (
+              <ul className="flex gap-2" aria-label="추가 사진">
+                {imageUrls.map((url, index) => (
+                  <li key={url}>
+                    <button
+                      type="button"
+                      onClick={() => setPhotoIndex(index)}
+                      aria-label={`사진 ${index + 1} 보기`}
+                      aria-pressed={index === photoIndex}
+                      className={`block h-16 w-16 overflow-hidden rounded border-2 ${index === photoIndex ? 'border-primary' : 'border-transparent'}`}
+                    >
+                      <img src={url} alt="" className="h-full w-full object-cover" />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         )}
 
@@ -116,6 +139,7 @@ export default function ItemDetailPage() {
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-text">{title}</h1>
             <p className="text-sm text-sub">{categoryName}</p>
+            {createdAt && <p className="text-sm text-sub">등록 {formatDate(createdAt)}</p>}
           </div>
 
           <div className="flex items-center gap-3">
@@ -142,7 +166,7 @@ export default function ItemDetailPage() {
           {foundTime && (
             <div>
               <p className="text-xs text-sub">발견 시간</p>
-              <p className="font-medium">{foundTime}</p>
+              <p className="font-medium">{String(foundTime).slice(0, 5)}</p>
             </div>
           )}
 
@@ -264,7 +288,7 @@ export default function ItemDetailPage() {
       )}
 
       {/* 하단 액션 버튼 */}
-      <div className="fixed lg:relative bottom-0 left-0 right-0 lg:bottom-auto bg-white border-t lg:border-t-0 p-4 space-y-3 shadow-lg lg:shadow-none">
+      <div className="fixed lg:relative bottom-16 left-0 right-0 z-30 lg:bottom-auto bg-white border-t lg:border-t-0 p-4 space-y-3 shadow-lg lg:shadow-none">
         {isReturned ? (
           <div className="bg-gray-50 p-3 rounded text-center text-sm text-sub">
             이미 반환된 물품입니다.

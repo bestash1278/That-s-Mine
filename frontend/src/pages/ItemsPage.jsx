@@ -13,6 +13,7 @@ import Pagination from '../components/common/Pagination.jsx';
 import Card from '../components/common/Card.jsx';
 import client from '../api/client.js';
 import { useItemSearch } from '../hooks/useItemSearch.js';
+import { useReferenceData } from '../hooks/useReferenceData.js';
 import { CATEGORIES } from '../constants/categories.js';
 import { SORT_OPTIONS, getSortLabel } from '../constants/sortOptions.js';
 import { statusLabels } from '../constants/status.js';
@@ -27,6 +28,7 @@ export default function ItemsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const { filters, updateFilter, removeFilter, clearAllFilters, setPage } = useItemSearch();
+  const { buildings } = useReferenceData();
 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -34,6 +36,10 @@ export default function ItemsPage() {
   const [totalPages, setTotalPages] = useState(0);
   const [totalElements, setTotalElements] = useState(0);
   // 검색어는 입력 중에 바로 검색하지 않고 '검색'을 누를 때 적용한다
+  // 모바일에서는 상세 조건(처리 상태·정렬·날짜)을 접어 두어 결과가 첫 화면 가까이 보이게 한다. PC는 항상 펼침
+  const [moreOpen, setMoreOpen] = useState(
+    Boolean(filters.status || filters.startDate || filters.endDate || (filters.sort && filters.sort !== 'NEWEST')),
+  );
   const [keywordInput, setKeywordInput] = useState(filters.keyword);
   const [prevKeyword, setPrevKeyword] = useState(filters.keyword);
   if (prevKeyword !== filters.keyword) {
@@ -51,6 +57,7 @@ export default function ItemsPage() {
           params: {
             keyword: filters.keyword || undefined,
             categoryId: filters.categoryId || undefined,
+            buildingId: filters.buildingId || undefined,
             status: filters.status || undefined,
             startDate: filters.startDate || undefined,
             endDate: filters.endDate || undefined,
@@ -104,6 +111,10 @@ export default function ItemsPage() {
   if (filters.categoryId) {
     const category = CATEGORIES.find((c) => c.id === parseInt(filters.categoryId));
     activeFilters.push({ key: 'categoryId', label: `카테고리: ${category?.name || filters.categoryId}` });
+  }
+  if (filters.buildingId) {
+    const building = buildings.find((b) => String(b.buildingId) === String(filters.buildingId));
+    activeFilters.push({ key: 'buildingId', label: `발견 장소: ${building?.buildingName || filters.buildingId}` });
   }
   if (filters.status) {
     activeFilters.push({ key: 'status', label: `상태: ${statusLabels[filters.status] || filters.status}` });
@@ -164,6 +175,28 @@ export default function ItemsPage() {
               />
 
               <Select
+                label="발견 장소"
+                name="buildingId"
+                options={buildings.map((b) => ({ id: b.buildingId, name: b.buildingName }))}
+                value={filters.buildingId}
+                onChange={(e) => updateFilter('buildingId', e.target.value)}
+                placeholder="전체"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setMoreOpen((open) => !open)}
+              aria-expanded={moreOpen}
+              aria-controls="more-filters"
+              className="inline-flex min-h-[44px] items-center font-medium text-primary underline lg:hidden"
+            >
+              {moreOpen ? '상세 조건 접기' : '상세 조건 펼치기 (처리 상태·정렬·날짜)'}
+            </button>
+
+            <div id="more-filters" className={`space-y-3 ${moreOpen ? '' : 'hidden'} lg:block`}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <Select
                 label="처리 상태"
                 name="status"
                 options={STATUS_OPTIONS}
@@ -201,6 +234,7 @@ export default function ItemsPage() {
                 onChange={(e) => updateFilter('endDate', e.target.value)}
                
               />
+            </div>
             </div>
 
             <Button type="submit" className="w-full">

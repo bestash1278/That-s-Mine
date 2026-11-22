@@ -10,6 +10,7 @@ export default function Select({
   error,
   helperText,
   className = '',
+  labelClassName = 'text-text',
   ...props
 }) {
   const inputId = id || name;
@@ -18,7 +19,7 @@ export default function Select({
   return (
     <div className="w-full">
       {label && (
-        <label htmlFor={inputId} className="block text-base font-medium text-text mb-2">
+        <label htmlFor={inputId} className={`block text-base font-medium mb-2 ${labelClassName}`}>
           {label}
           {required && (
             <>

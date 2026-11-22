@@ -49,7 +49,7 @@ export default function ReportLostPage() {
       <div>
         <h1 className="text-2xl font-bold text-text">분실 신고</h1>
         <p className="mt-1 text-sm text-sub">
-          잃어버린 물건을 등록해 두면 비슷한 습득물을 확인할 수 있어요. <span className="text-error">*</span> 표시는 꼭 입력해야 하는 항목이에요.
+          잃어버린 물건을 등록해 두면 비슷한 습득물을 확인할 수 있어요. <span className="text-red-700">*</span> 표시는 꼭 입력해야 하는 항목이에요.
         </p>
       </div>
       <LostReportForm
