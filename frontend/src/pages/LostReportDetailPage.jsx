@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { CalendarDays, ChevronLeft, ImageOff, Lock, MapPin, Pencil, Trash2 } from 'lucide-react';
 import Button from '../components/common/Button.jsx';
 import Card from '../components/common/Card.jsx';
@@ -8,6 +8,7 @@ import ErrorState from '../components/common/ErrorState.jsx';
 import LoadingState from '../components/common/LoadingState.jsx';
 import StatusBadge from '../components/common/StatusBadge.jsx';
 import LostReportStatusActions from '../components/lost-report/LostReportStatusActions.jsx';
+import MatchList from '../components/lost-report/MatchList.jsx';
 import { deleteLostReport, getLostReport } from '../api/lostReports.js';
 import { toUserError } from '../api/client.js';
 import { formatDate } from '../utils/dateUtils.js';
@@ -19,6 +20,7 @@ import { describeLostLocation, formatLostPeriod } from '../utils/lostReportForm.
 export default function LostReportDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hash } = useLocation();
   const [report, setReport] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -41,6 +43,13 @@ export default function LostReportDetailPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // 마이페이지의 "유사 습득물 N건 보기"로 들어오면 추천 영역으로 이동한다(추천은 화면이 그려진 뒤에 생긴다)
+  useEffect(() => {
+    if (hash === '#matches' && report?.mine) {
+      document.getElementById('matches')?.scrollIntoView({ block: 'start' });
+    }
+  }, [hash, report?.mine]);
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -138,6 +147,15 @@ export default function LostReportDetailPage() {
           </p>
         )}
       </Card>
+
+      {report.mine && report.status === 'SEARCHING' && (
+        <Card className="space-y-3">
+          <h2 id="matches" className="scroll-mt-4 font-bold text-text">
+            비슷한 습득물
+          </h2>
+          <MatchList reportId={report.reportId} searchQuery={new URLSearchParams({ categoryId: String(report.categoryId), startDate: report.lostDate }).toString()} />
+        </Card>
+      )}
 
       {report.mine && (
         <Card className="space-y-4">

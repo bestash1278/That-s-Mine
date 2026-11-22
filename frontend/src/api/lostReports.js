@@ -41,3 +41,9 @@ export async function getLostReportsInBounds(params) {
   const response = await client.get('/lost-reports/map', { params });
   return response.data?.data || [];
 }
+
+/** 유사 습득물 추천 (로그인한 신고자 본인만). [{ item, score, level, levelLabel, reasons }] */
+export async function getLostReportMatches(id) {
+  const response = await client.get(`/lost-reports/${id}/matches`);
+  return response.data?.data || [];
+}

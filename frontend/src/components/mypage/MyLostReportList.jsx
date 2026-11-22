@@ -67,9 +67,14 @@ export default function MyLostReportList({ onNotice }) {
                   </p>
                   <p className="text-sm text-sub">{formatLostPeriod(report.lostDate, report.lostEndDate, formatDate)}</p>
                   <p className="text-sm text-sub">{describeLostLocation(report)}</p>
-                  {/* 유사 물품 추천(11단계)이 연결되면 서버가 similarItemCount를 채운다. 화면 표시만 하고 알림은 보내지 않는다 */}
-                  {report.similarItemCount != null && (
-                    <p className="text-sm font-medium text-primary">유사 습득물 {report.similarItemCount}건 (소유 확정 아님)</p>
+                  {/* 유사 습득물 수는 찾는 중인 신고에만 온다. 참고용이며 알림은 보내지 않는다 */}
+                  {report.similarItemCount > 0 && (
+                    <Link
+                      to={`/lost-reports/${report.reportId}#matches`}
+                      className="inline-flex min-h-[44px] items-center text-sm font-medium text-primary underline"
+                    >
+                      유사 습득물 {report.similarItemCount}건 보기 (소유 확정 아님)
+                    </Link>
                   )}
                 </div>
               </div>

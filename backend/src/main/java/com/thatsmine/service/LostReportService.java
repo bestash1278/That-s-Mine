@@ -44,6 +44,7 @@ public class LostReportService {
     private final CampusBuildingRepository campusBuildingRepository;
     private final UserRepository userRepository;
     private final SearchSynonymService searchSynonymService;
+    private final MatchService matchService;
     private final ImageStorageService imageStorageService;
 
     // ------------------------------------------------------------------ 등록
@@ -149,8 +150,11 @@ public class LostReportService {
     public PageResponse<LostReportSummaryDTO> getMyLostReports(Long userId, int page, int size) {
         Pageable pageable = PageRequest.of(Math.max(page, 0), clampSize(size), Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<LostReport> result = lostReportRepository.findByUser_UserIdAndDeletedAtIsNull(userId, pageable);
+        // 찾는 중인 신고에만 '유사 습득물 N건'을 붙인다(후보는 한 번만 읽는다). 소유 확정이 아니라 참고용이다.
+        Map<Long, Integer> similarCounts = matchService.countFor(result.getContent());
         return PageResponse.from(result.map(r -> LostReportSummaryDTO.forOwner(
-                r, getThumbnailUrl(r.getReportId()), EditPolicy.lostReportContentLockReason(r.getStatus()))));
+                r, getThumbnailUrl(r.getReportId()), EditPolicy.lostReportContentLockReason(r.getStatus()))
+                .withSimilarItemCount(similarCounts.get(r.getReportId()))));
     }
 
     // ------------------------------------------------------------------ 수정·상태 변경·삭제 (본인만)

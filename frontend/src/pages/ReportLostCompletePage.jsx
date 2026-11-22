@@ -1,21 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { CheckCircle, Info } from 'lucide-react';
+import { CheckCircle } from 'lucide-react';
 import Card from '../components/common/Card.jsx';
-import ItemCard from '../components/common/ItemCard.jsx';
-import LoadingState from '../components/common/LoadingState.jsx';
+import MatchList from '../components/lost-report/MatchList.jsx';
 import { getLostReport } from '../api/lostReports.js';
-import { searchFoundItems } from '../api/foundItems.js';
 import { toUserError } from '../api/client.js';
 import { formatDate } from '../utils/dateUtils.js';
 import { describeLostLocation, formatLostPeriod } from '../utils/lostReportForm.js';
 
-const PREVIEW_SIZE = 3;
-
 /**
- * 분실 신고 완료: 접수 번호, 수정·철회 안내, 바로 볼 수 있는 습득물 미리보기
- * 미리보기는 지금은 '같은 종류 + 분실 시작일 이후 발견'으로 고른다.
- * 점수 기반 유사 물품 추천(GET /lost-reports/{id}/matches)은 11단계에서 이 자리에 연결한다.
+ * 분실 신고 완료: 접수 번호, 수정·철회 안내, 유사 습득물 추천(GET /lost-reports/{id}/matches)
  */
 export default function ReportLostCompletePage() {
   const { id } = useParams();
@@ -23,7 +17,6 @@ export default function ReportLostCompletePage() {
   const headingRef = useRef(null);
   const [report, setReport] = useState(location.state?.report || null);
   const [error, setError] = useState(null);
-  const [preview, setPreview] = useState({ loading: true, items: [], total: 0 });
 
   useEffect(() => {
     headingRef.current?.focus();
@@ -40,17 +33,6 @@ export default function ReportLostCompletePage() {
       cancelled = true;
     };
   }, [id, report]);
-
-  useEffect(() => {
-    if (!report) return undefined;
-    let cancelled = false;
-    searchFoundItems({ categoryId: report.categoryId, startDate: report.lostDate, size: PREVIEW_SIZE })
-      .then((page) => !cancelled && setPreview({ loading: false, items: page?.content || [], total: page?.totalElements || 0 }))
-      .catch(() => !cancelled && setPreview({ loading: false, items: [], total: 0 }));
-    return () => {
-      cancelled = true;
-    };
-  }, [report]);
 
   const receiptNo = report?.receiptNo || `LR-${String(id).padStart(6, '0')}`;
   const searchQuery = report
@@ -86,27 +68,8 @@ export default function ReportLostCompletePage() {
       )}
 
       <Card className="space-y-3">
-        <h2 className="font-bold text-text">지금 바로 확인해 보세요</h2>
-        <p className="flex gap-2 rounded bg-amber-50 p-3 text-sm text-amber-900">
-          <Info size={16} className="mt-0.5 flex-shrink-0" aria-hidden="true" />
-          같은 종류이면서 잃어버린 날 이후에 발견된 습득물이에요. 내 물건이라는 뜻은 아니니 사진과 특징을 꼭 확인해 주세요.
-        </p>
-        {preview.loading ? (
-          <LoadingState />
-        ) : preview.items.length === 0 ? (
-          <p className="text-sm text-sub">아직 비슷한 습득물이 없어요. 새로 등록되면 분실물 조회에서 확인할 수 있어요.</p>
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-3">
-            {preview.items.map((item) => (
-              <ItemCard key={item.itemId} item={item} />
-            ))}
-          </div>
-        )}
-        {searchQuery && (
-          <Link to={`/items?${searchQuery}`} className="inline-flex min-h-[44px] items-center font-medium text-primary underline">
-            {preview.total > PREVIEW_SIZE ? `조건에 맞는 습득물 ${preview.total}건 모두 보기` : '분실물 조회에서 더 찾아보기'}
-          </Link>
-        )}
+        <h2 className="font-bold text-text">비슷한 습득물이 있는지 확인해 보세요</h2>
+        <MatchList reportId={id} searchQuery={searchQuery} />
       </Card>
 
       <div className="flex flex-col gap-3">

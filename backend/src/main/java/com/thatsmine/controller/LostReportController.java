@@ -9,7 +9,9 @@ import com.thatsmine.dto.lost.LostReportStatusRequest;
 import com.thatsmine.dto.lost.LostReportSummaryDTO;
 import com.thatsmine.security.AuthUser;
 import com.thatsmine.service.AuthService;
+import com.thatsmine.dto.lost.MatchedItemDTO;
 import com.thatsmine.service.LostReportService;
+import com.thatsmine.service.MatchService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -29,7 +31,7 @@ import java.util.List;
  * 분실 신고 API (SPEC §20)
  * - 조회(목록·상세·지도)는 비회원도 가능. 신고자 정보는 응답에 없다
  * - 등록·수정·상태 변경·삭제는 로그인 필요, 수정·삭제는 본인만
- * - GET /lost-reports/{id}/matches(유사 습득물)는 11단계
+ * - GET /lost-reports/{id}/matches(유사 습득물 추천)는 로그인한 신고자 본인(또는 관리자)만
  */
 @RestController
 @RequestMapping("/api/v1/lost-reports")
@@ -37,6 +39,7 @@ import java.util.List;
 public class LostReportController {
 
     private final LostReportService lostReportService;
+    private final MatchService matchService;
     private final AuthService authService;
     private final ObjectMapper objectMapper;
 
@@ -65,6 +68,15 @@ public class LostReportController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         return ResponseEntity.ok(ApiResponse.success("SUCCESS", "지도 조회 완료",
                 lostReportService.getMapReports(minLat, maxLat, minLng, maxLng, keyword, categoryId, startDate, endDate)));
+    }
+
+    /** 유사 습득물 추천(점수 높은 순, 최대 10건). 소유 여부를 확정하는 결과가 아니다. */
+    @GetMapping("/{id:\\d+}/matches")
+    public ResponseEntity<ApiResponse<List<MatchedItemDTO>>> matches(@PathVariable Long id,
+                                                                     @AuthenticationPrincipal AuthUser authUser) {
+        Long userId = authService.requireUser(authUser).getUserId();
+        return ResponseEntity.ok(ApiResponse.success("SUCCESS", "유사 습득물 조회 완료",
+                matchService.getMatches(id, userId, authUser.isAdmin())));
     }
 
     @GetMapping("/{id:\\d+}")

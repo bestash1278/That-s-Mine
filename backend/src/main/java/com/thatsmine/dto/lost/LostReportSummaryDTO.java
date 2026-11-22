@@ -42,7 +42,7 @@ public class LostReportSummaryDTO {
     private Boolean contentEditable;
     private Boolean deletable;
     private String lockReason;
-    /** 유사 습득물 수. 추천 기능(11단계) 전에는 null */
+    /** 유사 습득물 수(점수 기준 이상). 찾는 중인 본인 신고에만 채우고, 나머지는 null. 소유 확정이 아니다 */
     private Integer similarItemCount;
 
     public static LostReportSummaryDTO from(LostReport report, String thumbnailUrl) {
@@ -73,6 +73,12 @@ public class LostReportSummaryDTO {
                 .thumbnailUrl(thumbnailUrl)
                 .createdAt(report.getCreatedAt())
                 .build();
+    }
+
+    /** 마이페이지 카드에 유사 습득물 수를 붙인다(null이면 표시하지 않음) */
+    public LostReportSummaryDTO withSimilarItemCount(Integer count) {
+        this.similarItemCount = count;
+        return this;
     }
 
     /** 마이페이지 카드: 수정·삭제 가능 여부를 함께 */

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -122,4 +123,15 @@ public interface FoundItemRepository extends JpaRepository<FoundItem, Long> {
                                    @Param("status") FoundItemStatus status,
                                    @Param("categoryId") Long categoryId,
                                    Pageable pageable);
+
+    /**
+     * 유사 물품 추천 후보: 삭제·숨김·반환 완료를 제외하고, 주어진 날짜 이후에 발견된 물품(최근 순).
+     * 종류·건물을 함께 읽어 점수 계산 중 추가 조회가 없게 한다.
+     */
+    @Query("SELECT f FROM FoundItem f JOIN FETCH f.category LEFT JOIN FETCH f.foundBuilding " +
+            "WHERE f.deletedAt IS NULL AND f.status NOT IN :excluded AND f.foundDate >= :fromDate " +
+            "ORDER BY f.foundDate DESC, f.itemId DESC")
+    List<FoundItem> findMatchCandidates(@Param("excluded") Collection<FoundItemStatus> excluded,
+                                        @Param("fromDate") LocalDate fromDate,
+                                        Pageable pageable);
 }
