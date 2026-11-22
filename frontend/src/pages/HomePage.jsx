@@ -26,9 +26,10 @@ export default function HomePage() {
       setError(null);
       try {
         const response = await client.get('/found-items/recent', {
-          params: { limit: 10 },
+          params: { limit: 8 },
         });
-        setRecentItems(response.data?.data || []);
+        // 응답은 페이지 객체 { content: [...] }
+        setRecentItems(response.data?.data?.content || []);
       } catch (err) {
         setError('최근 습득물을 불러올 수 없습니다.');
         console.error(err);

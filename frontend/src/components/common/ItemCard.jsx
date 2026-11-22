@@ -1,8 +1,15 @@
 import { Link } from 'react-router-dom';
+import { Archive, ImageOff, MapPin } from 'lucide-react';
 import Card from './Card';
 import StatusBadge from './StatusBadge';
+import { formatDate } from '../../utils/dateUtils.js';
 
-export default function ItemCard({ item }) {
+/**
+ * 물품 카드. 정보 순서 고정: 사진 → 물품명 → 카테고리 → 발견 → 상태 → 보관
+ * @param linkState 상세에서 "목록으로" 돌아올 주소 등 (Link state)
+ * @param highlighted 지도에서 선택된 물품 강조
+ */
+export default function ItemCard({ item, linkState, highlighted = false, onFocusItem }) {
   const {
     itemId,
     title,
@@ -13,59 +20,54 @@ export default function ItemCard({ item }) {
     status,
     statusLabel,
     firstImageUrl,
-    storageName,
     storageStatusLabel,
   } = item;
+  const thumb = firstImageUrl || item.imageUrls?.[0];
 
   return (
-    <Link to={`/items/${itemId}`}>
-      <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
+    <Link
+      to={`/items/${itemId}`}
+      state={linkState}
+      onFocus={onFocusItem ? () => onFocusItem(itemId) : undefined}
+      className="block h-full rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+    >
+      <Card
+        className={`h-full cursor-pointer transition-shadow hover:shadow-lg ${highlighted ? 'ring-2 ring-accent' : ''}`}
+      >
         <div className="space-y-3">
-          {/* 사진 */}
-          {firstImageUrl && (
-            <div className="w-full h-48 bg-gray-200 rounded overflow-hidden">
-              <img
-                src={firstImageUrl}
-                alt={title}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          )}
-
-          {/* 물품명 */}
-          <h3 className="text-lg font-bold text-text line-clamp-2">{title}</h3>
-
-          {/* 카테고리 */}
-          <p className="text-sm text-sub">{categoryName}</p>
-
-          {/* 발견: 날짜 · 장소 */}
-          <div className="text-sm text-text space-y-1">
-            <p>
-              <span className="font-medium">발견:</span> {foundDate} · {foundLocation}
-            </p>
-            {foundBuildingName && (
-              <p className="text-sub text-xs">건물: {foundBuildingName}</p>
+          <div className="h-40 w-full overflow-hidden rounded bg-gray-100">
+            {thumb ? (
+              <img src={thumb} alt={title} className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center gap-1 text-sub">
+                <ImageOff size={24} aria-hidden="true" />
+                <span className="text-xs">사진 없음</span>
+              </div>
             )}
           </div>
 
-          {/* 상태 배지 */}
-          <div className="flex items-center gap-2">
+          <div>
+            <h3 className="line-clamp-2 text-lg font-bold text-text">{title}</h3>
+            <p className="text-sm text-sub">{categoryName}</p>
+          </div>
+
+          <p className="flex items-start gap-1 text-sm text-text">
+            <MapPin size={16} className="mt-0.5 flex-shrink-0 text-error" aria-hidden="true" />
+            <span>
+              <span className="font-medium">발견</span> {formatDate(foundDate)} · {foundBuildingName || foundLocation}
+            </span>
+          </p>
+
+          <div className="flex flex-wrap items-center gap-2">
             <StatusBadge status={status} label={statusLabel} />
           </div>
 
-          {/* 보관: 장소명 또는 보관 장소 확인 중 */}
-          <div className="bg-blue-50 p-2 rounded text-sm text-text">
-            {storageName ? (
-              <p>
-                <span className="font-medium">보관:</span> {storageName}
-              </p>
-            ) : (
-              <p className="text-sub">보관 장소 확인 중...</p>
-            )}
-            {storageStatusLabel && (
-              <p className="text-xs text-sub">{storageStatusLabel}</p>
-            )}
-          </div>
+          <p className="flex items-start gap-1 rounded bg-blue-50 p-2 text-sm text-text">
+            <Archive size={16} className="mt-0.5 flex-shrink-0 text-primary" aria-hidden="true" />
+            <span>
+              <span className="font-medium">보관</span> {storageStatusLabel || '보관 장소 확인 중'}
+            </span>
+          </p>
         </div>
       </Card>
     </Link>

@@ -30,6 +30,14 @@ public class PublicFoundItemDTO {
     private BigDecimal foundLongitude;
     private String foundBuildingName;
 
+    /**
+     * 지도에 발견 위치 마커를 찍을 좌표. 발견 좌표가 없으면 발견 건물 좌표를 쓰고
+     * markerApproximate=true로 표시한다(화면에 "건물 위치 기준"이라고 안내).
+     */
+    private BigDecimal markerLatitude;
+    private BigDecimal markerLongitude;
+    private boolean markerApproximate;
+
     private FoundItemStatus status;
     private String statusLabel;
 
@@ -51,6 +59,15 @@ public class PublicFoundItemDTO {
         String storageStatusLabel = getStorageStatusLabel(item);
         String storageName = getStorageName(item, storageInfo);
 
+        BigDecimal markerLat = item.getFoundLatitude();
+        BigDecimal markerLng = item.getFoundLongitude();
+        boolean approximate = false;
+        if ((markerLat == null || markerLng == null) && item.getFoundBuilding() != null) {
+            markerLat = item.getFoundBuilding().getLatitude();
+            markerLng = item.getFoundBuilding().getLongitude();
+            approximate = markerLat != null && markerLng != null;
+        }
+
         return PublicFoundItemDTO.builder()
                 .itemId(item.getItemId())
                 .title(item.getTitle())
@@ -63,6 +80,9 @@ public class PublicFoundItemDTO {
                 .foundLatitude(item.getFoundLatitude())
                 .foundLongitude(item.getFoundLongitude())
                 .foundBuildingName(item.getFoundBuilding() != null ? item.getFoundBuilding().getBuildingName() : null)
+                .markerLatitude(markerLat)
+                .markerLongitude(markerLng)
+                .markerApproximate(approximate)
                 .status(item.getStatus())
                 .statusLabel(item.getStatus().getLabel())
                 .custodyType(item.getCustodyType())
@@ -79,14 +99,15 @@ public class PublicFoundItemDTO {
     }
 
     private static String getStorageStatusLabel(FoundItem item) {
-        if (item.getStatus() == FoundItemStatus.REPORTED) {
-            return "보관 장소 확인 중";
-        }
-        if (item.getCustodyType() == CustodyType.PENDING_HANDOVER) {
-            return "보관 장소 확인 중";
+        if (item.getCustodyType() == CustodyType.TEMPORARY) {
+            return "습득자가 임시 보관 중";
         }
         if (item.getStorage() != null) {
             return item.getStorage().getStorageName();
+        }
+        if (item.getCustodyType() == CustodyType.HANDED_OVER
+                && item.getStorageLocation() != null && !item.getStorageLocation().isBlank()) {
+            return item.getStorageLocation();
         }
         return "보관 장소 확인 중";
     }

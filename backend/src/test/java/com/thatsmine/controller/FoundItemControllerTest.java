@@ -7,6 +7,7 @@ import com.thatsmine.enums.CustodyType;
 import com.thatsmine.enums.FoundItemStatus;
 import com.thatsmine.enums.UserRole;
 import com.thatsmine.repository.*;
+import com.thatsmine.security.JwtTokenProvider;
 import com.thatsmine.service.FoundItemService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,6 +17,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,6 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 @Transactional
 @DisplayName("습득물 API 테스트")
@@ -58,7 +61,14 @@ class FoundItemControllerTest {
     @Autowired
     private FoundItemImageRepository foundItemImageRepository;
 
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
     private User testUser;
+
+    private String bearer() {
+        return "Bearer " + jwtTokenProvider.createToken(testUser);
+    }
     private Category testCategory;
     private CampusBuilding testBuilding;
     private StorageLocation testStorage;
@@ -68,7 +78,6 @@ class FoundItemControllerTest {
         testUser = User.builder()
                 .email("test@example.com")
                 .passwordHash("hash")
-                .name("테스트 사용자")
                 .nickname("테스터")
                 .role(UserRole.USER)
                 .build();
@@ -244,10 +253,11 @@ class FoundItemControllerTest {
                 .custodyType(CustodyType.PENDING_HANDOVER)
                 .build();
 
-        mockMvc.perform(post("/api/v1/found-items")
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .param("request", objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(multipart("/api/v1/found-items")
+                .file(new MockMultipartFile("request", "", "application/json", objectMapper.writeValueAsBytes(request)))
+                .header("Authorization", bearer()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.foundDate").exists());
     }
 
     @Test
@@ -266,10 +276,11 @@ class FoundItemControllerTest {
                 .custodyType(CustodyType.PENDING_HANDOVER)
                 .build();
 
-        mockMvc.perform(post("/api/v1/found-items")
-                .contentType(MediaType.MULTIPART_FORM_DATA)
-                .param("request", objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
+        mockMvc.perform(multipart("/api/v1/found-items")
+                .file(new MockMultipartFile("request", "", "application/json", objectMapper.writeValueAsBytes(request)))
+                .header("Authorization", bearer()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.foundCoordinates").exists());
     }
 
     @Test
@@ -288,7 +299,7 @@ class FoundItemControllerTest {
                 .title("테스트 물품")
                 .description("설명")
                 .categoryId(testCategory.getCategoryId())
-                .foundDate(LocalDate.now())
+                .foundDate(LocalDate.now().minusDays(1)) // 오늘+14시는 오전에 실행하면 '미래 시각'이 된다
                 .foundTime(LocalTime.of(14, 0))
                 .foundLocation("도서관")
                 .foundLatitude(new BigDecimal("37.4979"))
@@ -306,7 +317,8 @@ class FoundItemControllerTest {
 
         mockMvc.perform(multipart("/api/v1/found-items")
                 .file(imageFile)
-                .file(requestFile))
+                .file(requestFile)
+                .header("Authorization", bearer()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("SUCCESS"));
     }

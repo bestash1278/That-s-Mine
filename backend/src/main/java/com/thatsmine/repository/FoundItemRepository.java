@@ -34,43 +34,69 @@ public interface FoundItemRepository extends JpaRepository<FoundItem, Long> {
     @Query("SELECT f FROM FoundItem f WHERE f.deletedAt IS NULL ORDER BY f.createdAt DESC")
     List<FoundItem> findAllNotDeleted();
 
-    @Query(value = "SELECT f FROM FoundItem f " +
+    /**
+     * 공개 검색. 검색어는 동의어 확장 결과 중 최대 3개(kw1~kw3)를 OR로 비교한다.
+     * 이전에는 확장 결과를 "a|b"로 이어 붙여 LIKE에 넣어서, 동의어가 있는 검색어는 결과가 0건이었다.
+     * private_features는 검색 대상에 넣지 않는다(비공개 특징이 검색으로 추측되지 않게).
+     * status를 지정하지 않으면 숨김(excludedStatus) 물품은 제외한다.
+     */
+    @Query("SELECT f FROM FoundItem f " +
             "WHERE f.deletedAt IS NULL " +
-            "AND (:keyword IS NULL OR LOWER(f.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(f.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "AND (:kw1 IS NULL " +
+            "     OR LOWER(f.title) LIKE LOWER(CONCAT('%', :kw1, '%')) OR LOWER(f.description) LIKE LOWER(CONCAT('%', :kw1, '%')) " +
+            "     OR LOWER(f.title) LIKE LOWER(CONCAT('%', :kw2, '%')) OR LOWER(f.description) LIKE LOWER(CONCAT('%', :kw2, '%')) " +
+            "     OR LOWER(f.title) LIKE LOWER(CONCAT('%', :kw3, '%')) OR LOWER(f.description) LIKE LOWER(CONCAT('%', :kw3, '%'))) " +
             "AND (:categoryId IS NULL OR f.category.categoryId = :categoryId) " +
             "AND (:buildingId IS NULL OR f.foundBuilding.buildingId = :buildingId) " +
-            "AND (:status IS NULL OR f.status = :status) " +
+            "AND ((:status IS NULL AND f.status <> :excludedStatus) OR f.status = :status) " +
             "AND (:startDate IS NULL OR f.foundDate >= :startDate) " +
             "AND (:endDate IS NULL OR f.foundDate <= :endDate)")
     Page<FoundItem> search(
-            @Param("keyword") String keyword,
+            @Param("kw1") String kw1,
+            @Param("kw2") String kw2,
+            @Param("kw3") String kw3,
             @Param("categoryId") Long categoryId,
             @Param("buildingId") Long buildingId,
             @Param("status") FoundItemStatus status,
+            @Param("excludedStatus") FoundItemStatus excludedStatus,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate,
             Pageable pageable);
 
-    @Query(value = "SELECT f FROM FoundItem f " +
+    /**
+     * 지도 영역 검색. 발견 좌표가 없으면(건물만 선택한 신고) 발견 건물 좌표로 대신 판단한다.
+     */
+    @Query("SELECT f FROM FoundItem f LEFT JOIN f.foundBuilding b " +
             "WHERE f.deletedAt IS NULL " +
-            "AND f.foundLatitude BETWEEN :minLat AND :maxLat " +
-            "AND f.foundLongitude BETWEEN :minLng AND :maxLng " +
-            "AND (:keyword IS NULL OR LOWER(f.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(f.description) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "AND COALESCE(f.foundLatitude, b.latitude) BETWEEN :minLat AND :maxLat " +
+            "AND COALESCE(f.foundLongitude, b.longitude) BETWEEN :minLng AND :maxLng " +
+            "AND (:kw1 IS NULL " +
+            "     OR LOWER(f.title) LIKE LOWER(CONCAT('%', :kw1, '%')) OR LOWER(f.description) LIKE LOWER(CONCAT('%', :kw1, '%')) " +
+            "     OR LOWER(f.title) LIKE LOWER(CONCAT('%', :kw2, '%')) OR LOWER(f.description) LIKE LOWER(CONCAT('%', :kw2, '%')) " +
+            "     OR LOWER(f.title) LIKE LOWER(CONCAT('%', :kw3, '%')) OR LOWER(f.description) LIKE LOWER(CONCAT('%', :kw3, '%'))) " +
             "AND (:categoryId IS NULL OR f.category.categoryId = :categoryId) " +
-            "AND (:status IS NULL OR f.status = :status) " +
+            "AND ((:status IS NULL AND f.status <> :excludedStatus) OR f.status = :status) " +
             "AND (:startDate IS NULL OR f.foundDate >= :startDate) " +
-            "AND (:endDate IS NULL OR f.foundDate <= :endDate)")
+            "AND (:endDate IS NULL OR f.foundDate <= :endDate) " +
+            "ORDER BY f.createdAt DESC")
     List<FoundItem> searchByMapBounds(
             @Param("minLat") BigDecimal minLat,
             @Param("maxLat") BigDecimal maxLat,
             @Param("minLng") BigDecimal minLng,
             @Param("maxLng") BigDecimal maxLng,
-            @Param("keyword") String keyword,
+            @Param("kw1") String kw1,
+            @Param("kw2") String kw2,
+            @Param("kw3") String kw3,
             @Param("categoryId") Long categoryId,
             @Param("status") FoundItemStatus status,
+            @Param("excludedStatus") FoundItemStatus excludedStatus,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate);
 
-    @Query("SELECT f FROM FoundItem f WHERE f.deletedAt IS NULL ORDER BY f.createdAt DESC")
-    List<FoundItem> findRecentNotDeleted(Pageable pageable);
+    /** 마이페이지: 내가 신고한 습득물 (숨김 포함, 삭제 제외). 정렬은 Pageable로 */
+    Page<FoundItem> findByReporter_UserIdAndDeletedAtIsNull(Long reporterId, Pageable pageable);
+
+    // 정렬은 Pageable(createdAt DESC)로 지정한다.
+    @Query("SELECT f FROM FoundItem f WHERE f.deletedAt IS NULL AND f.status <> :excludedStatus")
+    Page<FoundItem> findRecentNotDeleted(@Param("excludedStatus") FoundItemStatus excludedStatus, Pageable pageable);
 }

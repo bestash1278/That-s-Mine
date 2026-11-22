@@ -1,62 +1,41 @@
-import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import { parseSearchParams, buildQueryString } from '../utils/queryParser.js';
+import { useCallback, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { EMPTY_FILTERS, buildQueryString, parseSearchParams } from '../utils/queryParser.js';
 
-export function useItemSearch() {
+/**
+ * 조회 조건을 URL 쿼리에 둔다(상태 = URL).
+ * 이전에는 window.history.replaceState로 주소만 바꿔서 React Router의 location이 갱신되지 않았고,
+ * 상세 화면에서 "목록으로"를 누르면 처음 조건으로 돌아가는 문제가 있었다.
+ *
+ * @param basePath '/items' 또는 '/map'
+ */
+export function useItemSearch(basePath = '/items') {
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const initialFilters = {
-    keyword: '',
-    categoryId: '',
-    startDate: '',
-    endDate: '',
-    sort: 'NEWEST',
-    page: 1,
-  };
+  const filters = useMemo(() => parseSearchParams(location.search), [location.search]);
 
-  const [filters, setFiltersState] = useState(() => {
-    // 초기 로드 시 URL에서 파싱
-    const parsed = parseSearchParams(location.search);
-    return { ...initialFilters, ...parsed };
-  });
+  const setFilters = useCallback(
+    (next) => {
+      const qs = buildQueryString(next, { includeListOnly: basePath === '/items' });
+      navigate(qs ? `${basePath}?${qs}` : basePath, { replace: true });
+    },
+    [navigate, basePath],
+  );
 
-  // 필터 변경 시 URL 업데이트
-  useEffect(() => {
-    const queryString = buildQueryString(filters);
-    const newUrl = queryString ? `/items?${queryString}` : '/items';
-    window.history.replaceState({}, '', newUrl);
-  }, [filters]);
+  const updateFilter = useCallback(
+    (key, value) => setFilters({ ...filters, [key]: value, page: 1 }),
+    [filters, setFilters],
+  );
 
-  const setFilters = (newFilters) => {
-    setFiltersState(newFilters);
-  };
+  const removeFilter = useCallback(
+    (key) => setFilters({ ...filters, [key]: EMPTY_FILTERS[key], page: 1 }),
+    [filters, setFilters],
+  );
 
-  const updateFilter = (key, value) => {
-    setFiltersState((prev) => ({
-      ...prev,
-      [key]: value,
-      page: 1, // 필터 변경 시 첫 페이지로 리셋
-    }));
-  };
+  const clearAllFilters = useCallback(() => setFilters({ ...EMPTY_FILTERS }), [setFilters]);
 
-  const removeFilter = (key) => {
-    setFiltersState((prev) => ({
-      ...prev,
-      [key]: initialFilters[key],
-      page: 1,
-    }));
-  };
-
-  const clearAllFilters = () => {
-    setFiltersState({ ...initialFilters });
-  };
-
-  const setPage = (page) => {
-    setFiltersState((prev) => ({
-      ...prev,
-      page,
-    }));
-  };
+  const setPage = useCallback((page) => setFilters({ ...filters, page }), [filters, setFilters]);
 
   return {
     filters,

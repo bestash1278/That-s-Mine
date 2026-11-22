@@ -39,6 +39,14 @@ public class User {
     @Column(nullable = false)
     private LocalDateTime updatedAt;
 
+    public void changeNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void changePasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

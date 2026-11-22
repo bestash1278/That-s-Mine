@@ -80,7 +80,7 @@ public class AdminFoundItemDTO {
                 .storageStatusLabel(storageStatusLabel)
                 .storageName(storageName)
                 .reporterId(item.getReporter().getUserId())
-                .reporterName(item.getReporter().getName())
+                .reporterName(item.getReporter().getNickname())
                 .imageUrls(imageUrls)
                 .build();
     }

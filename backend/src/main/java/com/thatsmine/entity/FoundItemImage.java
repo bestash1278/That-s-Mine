@@ -37,6 +37,11 @@ public class FoundItemImage {
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    public void changeOrder(int sortOrder, boolean thumbnail) {
+        this.sortOrder = sortOrder;
+        this.isThumbnail = thumbnail;
+    }
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

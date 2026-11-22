@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface StorageLocationRepository extends JpaRepository<StorageLocation, Long> {
-    List<StorageLocation> findByBuildingIdAndActiveTrue(Long buildingId);
-    List<StorageLocation> findByActiveTrue();
+    List<StorageLocation> findByBuilding_BuildingIdAndActiveTrueOrderByStorageNameAsc(Long buildingId);
+
+    List<StorageLocation> findByActiveTrueOrderByStorageNameAsc();
 }

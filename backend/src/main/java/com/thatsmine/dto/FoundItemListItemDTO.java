@@ -48,15 +48,16 @@ public class FoundItemListItemDTO {
                 .build();
     }
 
-    private static String getStorageStatusLabel(FoundItem item) {
-        if (item.getStatus() == FoundItemStatus.REPORTED) {
-            return "보관 장소 확인 중";
-        }
-        if (item.getCustodyType() == CustodyType.PENDING_HANDOVER) {
-            return "보관 장소 확인 중";
+    public static String getStorageStatusLabel(FoundItem item) {
+        if (item.getCustodyType() == CustodyType.TEMPORARY) {
+            return "습득자가 임시 보관 중";
         }
         if (item.getStorage() != null) {
             return item.getStorage().getStorageName();
+        }
+        if (item.getCustodyType() == CustodyType.HANDED_OVER
+                && item.getStorageLocation() != null && !item.getStorageLocation().isBlank()) {
+            return item.getStorageLocation();
         }
         return "보관 장소 확인 중";
     }

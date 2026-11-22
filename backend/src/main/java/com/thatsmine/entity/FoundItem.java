@@ -99,6 +99,45 @@ public class FoundItem {
 
     private LocalDateTime deletedAt;
 
+    // ------------------------------------------------------------------ 변경 (서비스에서 검증 후 호출)
+
+    /**
+     * 신고자가 고칠 수 있는 물품·발견 정보. 처리 상태는 관리자가 바꾼다(10단계).
+     */
+    public void updateByReporter(Category category, String title, String description, String privateFeatures,
+                                 LocalDate foundDate, LocalTime foundTime,
+                                 CampusBuilding foundBuilding, String foundLocation, String foundLocationDetail,
+                                 BigDecimal foundLatitude, BigDecimal foundLongitude) {
+        this.category = category;
+        this.title = title;
+        this.description = description;
+        this.privateFeatures = privateFeatures;
+        this.foundDate = foundDate;
+        this.foundTime = foundTime;
+        this.foundBuilding = foundBuilding;
+        this.foundLocation = foundLocation;
+        this.foundLocationDetail = foundLocationDetail;
+        this.foundLatitude = foundLatitude;
+        this.foundLongitude = foundLongitude;
+    }
+
+    /** 보관 상태와 보관 장소. 전달 완료(HANDED_OVER)가 아니면 보관 장소를 모두 비운다. */
+    public void updateCustody(CustodyType custodyType, StorageLocation storage, String storageLocation,
+                              String storageLocationDetail, BigDecimal storageLatitude, BigDecimal storageLongitude) {
+        this.custodyType = custodyType;
+        boolean handedOver = custodyType == CustodyType.HANDED_OVER;
+        this.storage = handedOver ? storage : null;
+        this.storageLocation = handedOver ? storageLocation : null;
+        this.storageLocationDetail = handedOver ? storageLocationDetail : null;
+        this.storageLatitude = handedOver ? storageLatitude : null;
+        this.storageLongitude = handedOver ? storageLongitude : null;
+    }
+
+    /** Soft Delete: 행은 남기고 삭제 시각만 기록한다. 반환 신청 이력은 그대로 남는다. */
+    public void softDelete() {
+        this.deletedAt = LocalDateTime.now();
+    }
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

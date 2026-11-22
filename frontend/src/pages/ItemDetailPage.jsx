@@ -4,6 +4,7 @@ import { MapPin, Archive, AlertCircle, Phone, Clock, FileText, ArrowLeft } from 
 import Button from '../components/common/Button.jsx';
 import Card from '../components/common/Card.jsx';
 import LocationCard from '../components/common/LocationCard.jsx';
+import ItemLocationMap from '../components/map/ItemLocationMap.jsx';
 import StatusBadge from '../components/common/StatusBadge.jsx';
 import LoadingState from '../components/common/LoadingState.jsx';
 import ErrorState from '../components/common/ErrorState.jsx';
@@ -139,31 +140,34 @@ export default function ItemDetailPage() {
           )}
 
           <p className="text-xs text-sub">{foundLocation}</p>
-
-          {/* 지도 마커 영역 (6단계에서 연결) */}
-          <div className="bg-gray-100 p-4 rounded text-center text-sm text-sub mt-3">
-            지도 영역 (준비 중)
-          </div>
         </div>
       </LocationCard>
 
       {/* 지금 보관 중인 곳 */}
       <LocationCard icon={Archive} color="text-primary" title="지금 보관 중인 곳">
         <div className="space-y-3">
-          {!storageInfo ? (
-            <p className="text-sub font-medium">보관 장소 확인 중</p>
-          ) : isTemporary ? (
+          {isTemporary ? (
             <div className="space-y-2">
-              <p className="text-sm font-medium">습득자가 보관 중</p>
+              <p className="text-sm font-medium">습득자가 임시 보관 중</p>
               <p className="text-xs text-sub">
-                반환 신청 시 관리 부서가 연결됩니다.
+                습득자의 연락처는 공개되지 않아요. 반환 신청을 하면 관리 부서가 연결해 드려요.
               </p>
             </div>
+          ) : !storageInfo ? (
+            item.storageLocation && custodyType === 'HANDED_OVER' ? (
+              <div className="space-y-1">
+                <p className="text-xs text-sub">보관 장소</p>
+                <p className="font-medium">{item.storageLocation}</p>
+                {item.storageLocationDetail && <p className="text-sm">{item.storageLocationDetail}</p>}
+              </div>
+            ) : (
+              <p className="text-sub font-medium">보관 장소 확인 중</p>
+            )
           ) : (
             <div className="space-y-2">
               {storageInfo.buildingName && (
                 <div>
-                  <p className="text-xs text-sub">보관 부서</p>
+                  <p className="text-xs text-sub">건물</p>
                   <p className="font-medium">{storageInfo.buildingName}</p>
                 </div>
               )}
@@ -187,15 +191,13 @@ export default function ItemDetailPage() {
                   발견한 곳과 같은 건물에 보관 중
                 </div>
               )}
-
-              {/* 지도 마커 영역 (6단계에서 연결) */}
-              <div className="bg-gray-100 p-4 rounded text-center text-sm text-sub">
-                지도 영역 (준비 중)
-              </div>
             </div>
           )}
         </div>
       </LocationCard>
+
+      {/* 발견·보관 위치 지도 (지도를 쓸 수 없으면 표시하지 않음, 위 글로 같은 정보를 볼 수 있음) */}
+      <ItemLocationMap item={item} />
 
       {/* 찾아가는 방법 */}
       {!isTemporary && storageInfo && (

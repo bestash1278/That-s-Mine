@@ -1,9 +1,9 @@
 package com.thatsmine.enums;
 
 public enum CustodyType {
-    PENDING_HANDOVER("PENDING_HANDOVER", "인수 대기"),
-    HANDED_OVER("HANDED_OVER", "인수 완료"),
-    TEMPORARY("TEMPORARY", "임시 보관");
+    PENDING_HANDOVER("PENDING_HANDOVER", "관리 부서에 전달 예정"),
+    HANDED_OVER("HANDED_OVER", "관리 부서에 전달 완료"),
+    TEMPORARY("TEMPORARY", "습득자가 임시 보관 중");
 
     private final String value;
     private final String label;
@@ -27,6 +27,6 @@ public enum CustodyType {
                 return type;
             }
         }
-        throw new IllegalArgumentException("Invalid CustodyType: " + value);
+        throw new IllegalArgumentException("올바르지 않은 보관 유형입니다: " + value);
     }
 }

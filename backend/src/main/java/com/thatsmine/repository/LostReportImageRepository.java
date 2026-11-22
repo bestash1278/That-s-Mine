@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface LostReportImageRepository extends JpaRepository<LostReportImage, Long> {
-    List<LostReportImage> findByReportIdOrderBySortOrder(Long reportId);
+    List<LostReportImage> findByReport_ReportIdOrderBySortOrderAsc(Long reportId);
 }
