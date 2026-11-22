@@ -2,7 +2,7 @@
   That's Mine — Claude Code 단계별 자동 실행 스크립트
 
   사용법 (프로젝트 폴더에서):
-    powershell -ExecutionPolicy Bypass -File .\run-all.ps1              # 0~12단계 전체
+    powershell -ExecutionPolicy Bypass -File .\run-all.ps1              # 0~13단계 전체
     powershell -ExecutionPolicy Bypass -File .\run-all.ps1 -From 5      # 5단계부터 재개
     powershell -ExecutionPolicy Bypass -File .\run-all.ps1 -From 3 -To 3  # 3단계만
 
@@ -14,7 +14,7 @@
 #>
 param(
   [int]$From = 0,
-  [int]$To = 12,
+  [int]$To = 13,
   [ValidateSet('auto', 'acceptEdits', 'bypassPermissions')]
   [string]$PermissionMode = 'auto',
   [string]$Model = '',
