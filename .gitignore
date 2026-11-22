@@ -28,3 +28,14 @@ backend/uploads/
 logs/
 *.log
 backend/src/main/resources/static/
+
+# 제출 대상 아님(로컬에만 보관)
+docs/223625_*
+docs/IMPLEMENTATION_PLAN.md
+docs/PROGRESS.md
+docs/REQUIREMENTS_TRACE.md
+docs/SPEC_CLARIFICATIONS.md
+docs/TEST_RESULTS.md
+docs/USABILITY_TEST_READY.md
+docs/VERIFICATION_CHECKLIST.md
+docs/DESIGN_RATIONALE.md
