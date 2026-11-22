@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -65,6 +66,13 @@ public class LostReportService {
                 .orElseThrow(() -> new IllegalArgumentException("신고자 정보를 찾을 수 없습니다."));
         Category category = findCategory(request.getCategoryId());
         CampusBuilding building = findBuilding(request.getLostBuildingId());
+
+        // 같은 내용을 짧은 시간 안에 다시 보내면(더블 클릭·재시도) 한 번만 접수한다
+        if (lostReportRepository.existsRecentDuplicate(userId, request.getTitle().trim(), request.getCategoryId(),
+                request.getLostDate(), resolveLocationName(request.getLostLocation(), building),
+                LocalDateTime.now().minus(FoundItemService.DUPLICATE_WINDOW))) {
+            throw new ConflictException("같은 내용의 분실 신고가 방금 접수되었습니다. 중복 접수를 막기 위해 등록하지 않았어요. 마이페이지에서 확인해 주세요.");
+        }
 
         LostReport report = lostReportRepository.save(LostReport.builder()
                 .user(user)
@@ -220,6 +228,30 @@ public class LostReportService {
         lostReportRepository.flush();
         return LostReportDTO.from(report, getImageUrls(reportId), true,
                 EditPolicy.lostReportContentLockReason(report.getStatus()));
+    }
+
+    /**
+     * 관리자의 분실 신고 상태 변경(SPEC §16 "신고 상태 변경"). 신고자와 같은 세 상태 사이를 오갈 수 있다.
+     * 내용은 바꾸지 않고, 같은 상태로 바꾸는 요청만 거절한다. 신고자 정보는 응답에 넣지 않는다.
+     */
+    @Transactional
+    public LostReportSummaryDTO adminChangeStatus(Long reportId, String status) {
+        LostReportStatus next;
+        try {
+            next = status == null || status.isBlank() ? null : LostReportStatus.fromValue(status.trim());
+        } catch (IllegalArgumentException e) {
+            next = null;
+        }
+        if (next == null) {
+            throw new FieldValidationException(Map.of("status", "바꿀 상태를 선택해 주세요."));
+        }
+        LostReport report = findNotDeleted(reportId);
+        if (!EditPolicy.lostReportStatusChangeAllowed(report.getStatus(), next)) {
+            throw new ConflictException("이미 '" + report.getStatus().getLabel() + "' 상태입니다.");
+        }
+        report.changeStatus(next);
+        lostReportRepository.flush();
+        return LostReportSummaryDTO.from(report, getThumbnailUrl(reportId));
     }
 
     /** Soft Delete. 분실 신고는 반환 이력과 연결되지 않으므로 본인이면 언제든 삭제할 수 있다. */

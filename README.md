@@ -30,9 +30,9 @@
 | 분실 신고 | 날짜 또는 추정 기간, 대표 추정 위치 + 추가 설명, 사진, 본인 수정·삭제 |
 | 유사 물품 추천 | 종류·이름·위치·날짜 규칙 점수(AI 미사용). "내 물건이라는 뜻은 아님" 표시 |
 | 지도 | Kakao 지도 위 마커(발견·보관·분실·반환 완료), 클러스터, 지도 영역 검색, 위치 선택. 키가 없으면 안내 + 건물별 목록 |
-| 계정 | 회원가입·로그인(JWT)·마이페이지(수정·삭제, 상태별 제한), 로그인 후 원래 화면 복귀 |
+| 계정 | 회원가입·로그인(JWT)·로그아웃(서버가 토큰 무효화)·마이페이지(수정·삭제, 상태별 제한), 로그인 후 원래 화면 복귀 |
 | 반환 신청 | 소유 확인 특징으로 신청·취소, 관리자 승인·반려·반환 완료, 한 물품은 한 사람에게만(DB 행 잠금) |
-| 관리자 | 전체 습득물·분실 신고 조회, 숨김, 발견·보관 위치 수정, 반환 신청 처리, 건물·공식 보관 장소 관리 |
+| 관리자 | 전체 습득물·분실 신고 조회, 분실 신고 상태 변경, 숨김, 발견·보관 위치 수정, 반환 신청 처리, 건물·공식 보관 장소 관리 |
 | 접근성·반응형 | 375/768/1280px, 터치 영역 44px, 입력 16px, 글자 대비 4.5:1, 키보드·포커스 표시, 대화상자 Esc |
 
 화면 예시(Kakao 키 없는 상태에서 찍은 시연 데이터 화면):
@@ -62,7 +62,7 @@
 .
 ├─ backend/                  Spring Boot (패키지 com.thatsmine)
 │  ├─ src/main/java/…        config / controller / service / repository / entity / dto / security / exception / enums
-│  ├─ src/main/resources/    application*.yml, db/migration/V1~V3 (Flyway)
+│  ├─ src/main/resources/    application*.yml, db/migration/V1~V4 (Flyway)
 │  ├─ src/test/              JUnit 테스트
 │  ├─ scripts/               MySQL에 띄운 서버로 보내는 API 점검 스크립트(Python)
 │  └─ .env.example           백엔드 환경변수 예시
@@ -117,7 +117,7 @@ CREATE DATABASE thatsmine_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci; 
 -- 운영 프로필은 thatsmine (DB_NAME으로 바꿀 수 있음)
 ```
 
-테이블은 서버를 처음 실행할 때 Flyway가 만듭니다(V1~V3). 직접 SQL을 실행할 필요가 없습니다. `root` 대신 전용 계정을 쓰려면 DB 권한을 준 뒤 `DB_USER`/`DB_PASSWORD`를 설정하세요.
+테이블은 서버를 처음 실행할 때 Flyway가 만듭니다(V1~V4). 직접 SQL을 실행할 필요가 없습니다. `root` 대신 전용 계정을 쓰려면 DB 권한을 준 뒤 `DB_USER`/`DB_PASSWORD`를 설정하세요.
 
 ## 7. 실행
 
@@ -190,6 +190,7 @@ MySQL에 서버를 띄운 뒤 쓰는 점검 스크립트:
 python backend/scripts/mysql_api_check_stage7_9.py     # 지도·인증·분실 신고·마이페이지
 python backend/scripts/mysql_api_check_stage10.py      # 반환 신청·관리자·동시성
 python backend/scripts/mysql_api_check_stage11.py      # 유사 물품 추천
+python backend/scripts/mysql_api_check_stage12.py     # 로그아웃 무효화·중복 제출 방지·관리자 분실 신고 상태 변경
 python backend/scripts/check_demo_reset.py             # 시연 데이터 초기화 재현성
 node scripts/browser/flows.mjs                         # 과업 A·B 등 주요 흐름을 헤드리스 Chrome(375px)으로 수행
 node scripts/browser/audit.mjs                         # 22개 화면(없는 주소 포함) × 3개 화면 크기 점검(넘침·터치·대비·라벨·포커스)
@@ -205,8 +206,8 @@ node scripts/browser/audit.mjs                         # 22개 화면(없는 주
 - 사람 대상 사용성 테스트는 수행하지 않았습니다. 성공률 목표(5명 중 4명)는 설계 목표입니다.
 - Kakao 키가 없는 상태로만 점검해 실제 지도 렌더링·마커·클러스터는 확인하지 못했습니다.
 - 실제 스마트폰이 아니라 Chrome의 화면 크기 에뮬레이션으로 반응형을 점검했습니다.
-- 로그아웃은 클라이언트에서 토큰을 지우는 방식이라 서버가 토큰을 무효화하지 않습니다(24시간 유효). 로그인 시도 횟수 제한이 없습니다. 토큰은 `localStorage`에 보관합니다.
-- 같은 내용의 신고를 두 번 보내면 서버가 합치지 않습니다(화면에서 버튼 비활성화로만 막음). 반환 신청의 중복은 서버가 막습니다.
+- 로그인 시도 횟수 제한이 없습니다. 토큰은 `localStorage`에 보관합니다(로그아웃하면 서버가 그 토큰을 무효화합니다).
+- 중복 제출 방지(같은 내용의 신고를 60초 안에 다시 보내면 거절)는 **서버 한 대 기준**입니다. 여러 대로 늘리면 DB 제약이 더 필요합니다.
 - 유사 물품 추천의 정확도는 검증하지 않았습니다(시연 데이터 몇 건의 순위만 확인). 동의어 사전은 20여 개입니다.
 - 알림(푸시·이메일), 학교 시스템 연동, 자동 소유 판정, 배송은 범위 밖입니다(제안서 §4).
 - 테스트는 MySQL 8.4 LTS가 아니라 로컬 MySQL 26.10에서 실행했습니다.

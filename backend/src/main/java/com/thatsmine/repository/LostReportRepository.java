@@ -91,4 +91,13 @@ public interface LostReportRepository extends JpaRepository<LostReport, Long> {
     Page<LostReport> searchForAdmin(@Param("keyword") String keyword,
                                     @Param("status") LostReportStatus status,
                                     Pageable pageable);
+
+    /** 같은 사용자가 같은 내용(물품명·종류·분실 날짜·추정 위치)을 방금 등록했는지 (중복 제출 방지) */
+    @Query("SELECT COUNT(l) > 0 FROM LostReport l WHERE l.deletedAt IS NULL AND l.user.userId = :userId " +
+            "AND l.title = :title AND l.category.categoryId = :categoryId AND l.lostDate = :lostDate " +
+            "AND l.lostLocation = :lostLocation AND l.createdAt >= :since")
+    boolean existsRecentDuplicate(@Param("userId") Long userId, @Param("title") String title,
+                                  @Param("categoryId") Long categoryId, @Param("lostDate") LocalDate lostDate,
+                                  @Param("lostLocation") String lostLocation,
+                                  @Param("since") java.time.LocalDateTime since);
 }

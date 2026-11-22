@@ -5,6 +5,7 @@ import com.thatsmine.dto.*;
 import com.thatsmine.dto.me.MyFoundItemDetailDTO;
 import com.thatsmine.security.AuthUser;
 import com.thatsmine.service.AuthService;
+import com.thatsmine.service.DuplicateSubmissionGuard;
 import com.thatsmine.service.FoundItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -25,6 +26,7 @@ import java.util.List;
 public class FoundItemController {
     private final FoundItemService foundItemService;
     private final AuthService authService;
+    private final DuplicateSubmissionGuard submissionGuard;
     private final ObjectMapper objectMapper;
 
     /**
@@ -99,7 +101,9 @@ public class FoundItemController {
         // 신고자는 항상 로그인한 사용자. 요청 본문의 값은 쓰지 않는다.
         Long reporterId = authService.requireUser(authUser).getUserId();
 
-        PublicFoundItemDTO response = foundItemService.createFoundItem(createRequest, images, reporterId);
+        // 같은 사용자의 등록 요청은 한 번에 하나씩 처리해 동시에 들어온 중복 요청도 걸러낸다
+        PublicFoundItemDTO response = submissionGuard.runExclusive(reporterId,
+                () -> foundItemService.createFoundItem(createRequest, images, reporterId));
         return ResponseEntity.ok(ApiResponse.success("SUCCESS", "습득물 신고가 등록되었습니다.", response));
     }
 

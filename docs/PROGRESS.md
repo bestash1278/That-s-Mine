@@ -432,3 +432,28 @@
 - 목록·지도·관리자의 사진 조회 N+1(최대 300건), 번들 500kB 초과 경고(코드 분할 미적용)
 - `npm run lint` 경고 16개(effect 안 `setState`, 컨텍스트 파일의 컴포넌트 외 내보내기). 오류 0
 - 실제 스마트폰·태블릿 기기, 스크린리더, MySQL 8.4 LTS(로컬은 26.10)에서는 확인하지 않았다
+
+## 12단계 후속 — 미구현으로 남겼던 것 보완 (2026-11-22)
+
+12단계 보고에서 "구현하지 않았다"고 적은 것 중 SPEC에 있는 것을 구현했다. 구현하지 않은 이유(내 판단: 상태 변경은 본인 권한이라고 해석, 화면 버튼 비활성화면 충분하다고 판단, 서버 토큰 무효화는 스키마 변경이 필요해 보류)는 근거가 약해 바로잡았다. 시연 데이터 초기화 **화면 버튼은 요청에 따라 만들지 않았다**(API만 유지). 로그인 시도 횟수 제한은 SPEC에 없어 만들지 않았다.
+
+| 항목 | 구현 | 주요 파일 |
+|---|---|---|
+| 관리자 분실 신고 상태 변경(SPEC §16) | `PATCH /admin/lost-reports/{id}/status`: 찾는 중·찾기 완료·신고 종료 사이를 변경(내용은 그대로, 같은 상태면 409, 신고자 정보 없음). 관리자 화면 "분실 신고" 탭에 상태 변경 버튼 + 확인 대화상자 | `LostReportService.adminChangeStatus`, `AdminController`, `components/admin/AdminLostReports.jsx`, `api/admin.js` |
+| 서버 중복 제출 방지(SPEC §23) | 같은 사용자가 같은 내용(습득물: 물품명·종류·발견 날짜·장소 / 분실: 물품명·종류·분실 날짜·위치)을 60초 안에 다시 보내면 409. 사용자별 잠금(`DuplicateSubmissionGuard`)으로 동시 요청도 1건만 접수 | `DuplicateSubmissionGuard`, `FoundItemService`, `LostReportService`, 두 Repository의 `existsRecentDuplicate`, 두 Controller |
+| 로그아웃 토큰 무효화(SPEC §13) | 토큰에 고유 번호(jti)를 넣고, 로그아웃하면 DB `revoked_tokens`(Flyway V4)에 올려 만료 전에도 401. 같은 계정의 다른 로그인은 유지, 만료된 기록은 로그아웃 때 정리 | `JwtTokenProvider.parseToken`, `TokenRevocationService`, `RevokedToken`, `JwtAuthenticationFilter`, `AuthController.logout`, `V4__revoked_tokens.sql` |
+
+### 한계
+- 중복 제출 방지는 **서버 한 대(JVM) 기준**이다. 서버를 여러 대로 늘리면 DB 쪽 제약이 필요하다.
+- 60초가 지나면 같은 내용도 다시 등록할 수 있다(의도: 정말 같은 물건을 다시 신고하는 경우를 막지 않기 위함).
+- 로그인 시도 제한은 여전히 없다. 토큰은 `localStorage`에 있다.
+- 모든 요청이 `revoked_tokens`를 한 번 조회한다(기본키 조회). 사용자가 많아지면 캐시를 검토한다.
+
+### 검증
+| 항목 | 결과 |
+|---|---|
+| `gradlew test` (H2) | 111개 통과 (신규 5: 토큰 jti, 로그아웃 무효화, 습득물·분실 중복 제출, 관리자 상태 변경) |
+| `npm test` | 19개 파일, 100개 통과 (신규: `AdminLostReports` 3개) |
+| `backend/scripts/mysql_api_check_stage12.py` (MySQL, 실제 HTTP, 동시 6회 요청 포함) | 28 통과 / 0 실패. Flyway V4가 MySQL에 적용됨 |
+| 기존 MySQL 점검 7~9단계·10단계·11단계 재실행 | 33 / 91 / 29 통과 |
+| `node scripts/browser/flows.mjs` 재실행 | 36단계 통과 |

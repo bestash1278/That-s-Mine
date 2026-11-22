@@ -11,8 +11,10 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * JWT 발급·검증 (HS256).
@@ -46,6 +48,7 @@ public class JwtTokenProvider {
     public String createToken(User user) {
         Date now = new Date();
         return Jwts.builder()
+                .id(UUID.randomUUID().toString())
                 .subject(String.valueOf(user.getUserId()))
                 .claim(CLAIM_EMAIL, user.getEmail())
                 .claim(CLAIM_ROLE, user.getRole().name())
@@ -68,6 +71,24 @@ public class JwtTokenProvider {
             return Optional.of(new AuthUser(userId, email, role));
         } catch (JwtException | IllegalArgumentException e) {
             // 만료·위조·형식 오류 → 비로그인으로 처리
+            return Optional.empty();
+        }
+    }
+
+    /** 로그인 사용자와 함께 토큰의 고유 번호(jti)·만료 시각을 돌려준다(로그아웃 때 토큰을 무효화하려고). */
+    public record ParsedToken(AuthUser user, String jti, Instant expiresAt) {
+    }
+
+    public Optional<ParsedToken> parseToken(String token) {
+        if (token == null || token.isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+            AuthUser user = new AuthUser(Long.valueOf(claims.getSubject()), claims.get(CLAIM_EMAIL, String.class),
+                    UserRole.valueOf(claims.get(CLAIM_ROLE, String.class)));
+            return Optional.of(new ParsedToken(user, claims.getId(), claims.getExpiration().toInstant()));
+        } catch (JwtException | IllegalArgumentException e) {
             return Optional.empty();
         }
     }

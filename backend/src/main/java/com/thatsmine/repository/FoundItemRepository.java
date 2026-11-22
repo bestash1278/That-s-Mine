@@ -134,4 +134,13 @@ public interface FoundItemRepository extends JpaRepository<FoundItem, Long> {
     List<FoundItem> findMatchCandidates(@Param("excluded") Collection<FoundItemStatus> excluded,
                                         @Param("fromDate") LocalDate fromDate,
                                         Pageable pageable);
+
+    /** 같은 사용자가 같은 내용(물품명·종류·발견 날짜·발견 장소)을 방금 등록했는지 (중복 제출 방지) */
+    @Query("SELECT COUNT(f) > 0 FROM FoundItem f WHERE f.deletedAt IS NULL AND f.reporter.userId = :userId " +
+            "AND f.title = :title AND f.category.categoryId = :categoryId AND f.foundDate = :foundDate " +
+            "AND f.foundLocation = :foundLocation AND f.createdAt >= :since")
+    boolean existsRecentDuplicate(@Param("userId") Long userId, @Param("title") String title,
+                                  @Param("categoryId") Long categoryId, @Param("foundDate") LocalDate foundDate,
+                                  @Param("foundLocation") String foundLocation,
+                                  @Param("since") java.time.LocalDateTime since);
 }

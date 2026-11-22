@@ -30,6 +30,12 @@ export async function getAdminLostReports({ keyword, status, page = 0, size = 20
   return response.data?.data;
 }
 
+/** 관리자의 분실 신고 상태 변경: SEARCHING | FOUND | CLOSED (내용은 바뀌지 않는다) */
+export async function changeLostReportStatus(reportId, status) {
+  const response = await client.patch(`/admin/lost-reports/${reportId}/status`, { status });
+  return response.data?.data;
+}
+
 export async function getAdminReturnRequests({ status, page = 0, size = 20 }) {
   const response = await client.get('/admin/return-requests', { params: clean({ status, page, size }) });
   return response.data?.data;

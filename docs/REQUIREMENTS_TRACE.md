@@ -45,7 +45,7 @@
 | §15 | 반환 신청: 소유 확인 특징, 상태 5종, 승인과 완료 구분, 중복 반환 방지(트랜잭션·동시성) | `/return-request/:id`, `/admin` | F: `ReturnRequestPage.jsx`, `components/admin/AdminReturnRequests.jsx` / B: `ReturnRequestService.java`, `ReturnPolicy.java` | 구현(MySQL에서 동시 신청·승인 점검 통과, 91개 스크립트) |
 | §16 | 관리자: 전체 습득물·분실 신고 조회, 숨김, 정보·발견 위치 수정, 보관 위치 지정, 반환 처리, 상태 변경, 건물·보관 장소 관리 | `/admin`(탭 4개) | F: `pages/AdminPage.jsx`, `components/admin/*` / B: `AdminController.java`, `AdminService.java` | 부분 구현: **관리자가 분실 신고의 상태를 바꾸는 기능은 없다**(조회만, 상태 변경은 본인 권한). 습득물의 제목·특징 같은 "잘못 등록된 정보" 전반의 수정은 발견 위치와 보관 위치만 가능하다. 건물 삭제는 SPEC API 목록에 없어 없다 |
 | §17 | 유사 물품 추천: 규칙 점수 30/30/25/15, 반환 완료 제외, 소유 확정 아님 명시 | `/report-lost/complete/:id`, `/lost-reports/:id`, `/mypage?tab=lost` | B: `MatchScorer.java`, `MatchService.java` / F: `MatchList.jsx` | 구현. **점수의 정확도(실제로 맞는 물건을 잘 찾는지)는 검증하지 않았다** |
-| §18·§19 | DB 설계와 상태값(프론트·백엔드 문자열 일치) | — | B: `db/migration/V1~V3`, `enums/*` / F: `constants/status.js` | 구현(SPEC §18 대비 추가 컬럼은 `docs/ERD.md`에 기록) |
+| §18·§19 | DB 설계와 상태값(프론트·백엔드 문자열 일치) | — | B: `db/migration/V1~V4`, `enums/*` / F: `constants/status.js` | 구현(SPEC §18 대비 추가 컬럼은 `docs/ERD.md`에 기록) |
 | §20 | REST API(`/api/v1`) | — | B: `controller/*` | 구현. 추가 경로 5개(아래 §3) |
 | §23 | 보안: BCrypt, 서버 JWT 검증, 작성자·관리자만 수정, 환경변수, `.gitignore`·`.env.example`, 파일명·이미지 검증, 좌표 검증, 중복 제출 방지, 오류 메시지, 요청 중 버튼 비활성, 키 없어도 앱 실행 | 전체 | B: `SecurityConfig.java`, `ImageStorageService.java`, `GlobalExceptionHandler.java` | 부분 구현: **중복 제출은 화면(버튼 비활성·재진입 방지)에서만 막고 서버가 같은 내용의 두 요청을 한 건으로 합치지는 않는다**. 반환 신청의 중복은 서버가 막는다 |
 | §24 | 일관성·가시성·피드백·오류 예방·사용자 제어·인지 부담 감소 | 전체 | — | 구현(점검 항목은 `docs/PROGRESS.md` 12단계). 사용성 목표 수치(5명 중 4명)는 설계 목표이며 **측정하지 않았다** |
@@ -64,14 +64,15 @@
 | `PATCH /lost-reports/{id}/status` | 찾는 중 ↔ 찾기 완료 ↔ 신고 종료 변경 |
 | `GET /auth/check-email` | 가입 화면의 이메일 중복 확인 |
 | `POST /dev/reset-demo` | 평가 과업용 초기화(dev 프로필, ADMIN) |
+| `PATCH /admin/lost-reports/{id}/status` | SPEC §16 "신고 상태 변경"(분실 신고) |
 
 ## 4. 구현하지 않았거나 확인하지 못한 것 요약
 
 1. 실제 Kakao 지도 렌더링과 SDK 동작(키 없음)
 2. 사용성 테스트(사람 대상 과업 A·B, 성공률, 소요 시간) — 점검은 자동화된 브라우저로만 했다
-3. 로그아웃 시 서버의 토큰 무효화, 로그인 시도 제한
-4. 관리자의 분실 신고 상태 변경, 습득물 전반의 정보 수정
-5. 같은 내용의 중복 신고를 서버에서 합치는 처리
+3. 로그인 시도 제한(요구사항에 없음)
+4. 습득물 전반의 정보 수정(관리자는 발견·보관 위치만)
+5. 서버가 여러 대일 때의 중복 제출 방지(지금은 서버 한 대 기준)
 6. 시연 데이터 초기화 화면 버튼
 7. 알림(푸시·이메일), 학교 시스템 연동, 자동 소유 판정, 배송 — 제외 범위
 8. 추천 점수의 정확도 검증, 동의어 사전 편집 화면

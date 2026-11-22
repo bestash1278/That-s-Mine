@@ -28,13 +28,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER = "Bearer ";
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final TokenRevocationService tokenRevocationService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
         if (header != null && header.startsWith(BEARER)) {
-            jwtTokenProvider.parse(header.substring(BEARER.length()).trim()).ifPresent(user -> {
+            // 로그아웃한 토큰은 만료 전이어도 인증하지 않는다
+            jwtTokenProvider.parseToken(header.substring(BEARER.length()).trim())
+                    .filter(parsed -> !tokenRevocationService.isRevoked(parsed.jti()))
+                    .map(JwtTokenProvider.ParsedToken::user)
+                    .ifPresent(user -> {
                 var authentication = new UsernamePasswordAuthenticationToken(
                         user, null, List.of(new SimpleGrantedAuthority("ROLE_" + user.role().name())));
                 SecurityContextHolder.getContext().setAuthentication(authentication);

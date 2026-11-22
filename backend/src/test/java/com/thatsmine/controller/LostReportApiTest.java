@@ -242,4 +242,46 @@ class LostReportApiTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors.images").exists());
     }
+
+    @Test
+    @DisplayName("같은 내용의 분실 신고를 곧바로 다시 보내면 서버가 막는다(409)")
+    void duplicateSubmissionRejected() throws Exception {
+        create(pouch().build());
+        mockMvc.perform(multipart("/api/v1/lost-reports").file(part(pouch().build())).header("Authorization", ownerBearer))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("같은 내용의 분실 신고가 방금 접수")));
+        // 다른 사용자는 같은 내용도 접수할 수 있다
+        mockMvc.perform(multipart("/api/v1/lost-reports").file(part(pouch().build())).header("Authorization", otherBearer))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("관리자는 남의 분실 신고 상태를 바꿀 수 있고(내용은 그대로), 일반 사용자는 관리자 API를 못 쓴다")
+    void adminChangesStatus() throws Exception {
+        long id = create(pouch().build());
+        User admin = userRepository.save(User.builder().email("admin@test.local").passwordHash("x").nickname("관리자").role(UserRole.ADMIN).build());
+        String adminBearer = "Bearer " + jwtTokenProvider.createToken(admin);
+
+        mockMvc.perform(patch("/api/v1/admin/lost-reports/" + id + "/status").header("Authorization", otherBearer)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"CLOSED\"}"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(patch("/api/v1/admin/lost-reports/" + id + "/status").header("Authorization", adminBearer)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"CLOSED\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("CLOSED"))
+                .andExpect(jsonPath("$.data.title").value("파란색 파우치"));
+        mockMvc.perform(patch("/api/v1/admin/lost-reports/" + id + "/status").header("Authorization", adminBearer)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"CLOSED\"}"))
+                .andExpect(status().isConflict());
+        mockMvc.perform(patch("/api/v1/admin/lost-reports/" + id + "/status").header("Authorization", adminBearer)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"NOPE\"}"))
+                .andExpect(status().isBadRequest());
+        mockMvc.perform(patch("/api/v1/admin/lost-reports/999999/status").header("Authorization", adminBearer)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"FOUND\"}"))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(patch("/api/v1/admin/lost-reports/" + id + "/status").header("Authorization", adminBearer)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"status\":\"SEARCHING\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("SEARCHING"));
+    }
 }

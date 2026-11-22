@@ -58,7 +58,7 @@
 |---|---|---|---|
 | POST | `/auth/signup` | 비회원 | 회원가입 후 바로 로그인된 토큰을 돌려준다. 본문 `{ email, password, passwordConfirm, nickname }`. 이메일 앞뒤 공백 제거·소문자 저장, 비밀번호 8~64자 영문+숫자, 닉네임 2~20자. 가입은 항상 `USER`(요청의 role은 무시) |
 | POST | `/auth/login` | 비회원 | `{ email, password }` → `{ accessToken, tokenType, expiresIn, user }`. 실패는 이메일 존재 여부를 알 수 없게 같은 메시지 |
-| POST | `/auth/logout` | 비회원 | 서버는 토큰을 무효화하지 않는다(클라이언트가 토큰을 지운다) |
+| POST | `/auth/logout` | 비회원 | `Authorization` 헤더의 토큰이 유효하면 서버가 그 토큰의 고유 번호(jti)를 차단 목록(`revoked_tokens`)에 올려 **만료 전에도 401**이 된다. 같은 계정의 다른 로그인은 유지. 토큰이 없거나 이미 만료·위조여도 200 |
 | GET | `/auth/check-email?email=` | 비회원 | 이메일 중복 확인 |
 
 ## 2. 내 정보·마이페이지 `/users/me` (로그인)
@@ -80,7 +80,7 @@
 | GET | `/found-items/recent?limit=8` | 비회원 | 최근 등록 |
 | GET | `/found-items/map` | 비회원 | 지도 영역 검색(최대 300건). 필수 `minLat,maxLat,minLng,maxLng`, 선택 `keyword,categoryId,status,startDate,endDate`. 영역이 범위 밖이거나 최소>최대면 400(`fieldErrors.bounds`). 응답에 `markerLatitude/markerLongitude/markerApproximate`(좌표가 없으면 건물 좌표로 대신, true) |
 | GET | `/found-items/{id}` | 비회원 | 상세. **공개 DTO**: 사진, 특징, 발견 날짜·위치, 보관 상태·장소·`storageInfo`(문의처·운영 시간·수령 절차), 등록 시각. 비공개 특징·신고자 정보는 필드가 없다. 삭제·숨김이면 404 |
-| POST | `/found-items` | 로그인 | 신고 등록(multipart). `request` 필드: `title*, categoryId*, foundDate*, foundBuildingId 또는 foundLocation*, custodyType*, description, privateFeatures, foundTime, foundLocationDetail, foundLatitude/foundLongitude, storageId 또는 storageLocation(전달 완료일 때 필수), storageLocationDetail, storageLatitude/storageLongitude, representativeImageIndex`. 201 |
+| POST | `/found-items` | 로그인 | 신고 등록(multipart). 같은 사용자가 같은 내용(물품명·종류·발견 날짜·발견 장소)을 60초 안에 다시 보내면 409(중복 제출 방지, 동시 요청도 1건만). `request` 필드: `title*, categoryId*, foundDate*, foundBuildingId 또는 foundLocation*, custodyType*, description, privateFeatures, foundTime, foundLocationDetail, foundLatitude/foundLongitude, storageId 또는 storageLocation(전달 완료일 때 필수), storageLocationDetail, storageLatitude/storageLongitude, representativeImageIndex`. 201 |
 | PATCH | `/found-items/{id}` | 작성자 | 수정(multipart, 같은 필드 + `keepImageUrls`, `representativeImageUrl`). 반환 진행 중·완료·숨김·처리 중 신청이 있으면 409 |
 | DELETE | `/found-items/{id}` | 작성자 | 삭제(Soft Delete: `deleted_at`). 수정과 같은 제한 |
 
@@ -92,7 +92,7 @@
 | GET | `/lost-reports/map` | 비회원 | 지도 영역(찾는 중만) |
 | GET | `/lost-reports/{id}` | 비회원 | 상세(본인이면 `mine`, 수정 가능 여부 포함) |
 | GET | `/lost-reports/{id}/matches` | 신고자 본인·ADMIN | **유사 습득물 추천**(점수 높은 순 최대 10건). `[{ item, score, level, levelLabel, reasons[] }]`. 찾는 중이 아니면 빈 목록, 남이 호출하면 403. 소유 여부를 확정하는 결과가 아님 |
-| POST | `/lost-reports` | 로그인 | 등록(multipart). `request`: `title*, categoryId*, lostDate*, lostEndDate(기간), lostBuildingId 또는 lostLocation*, lostLocationDetail, lostLatitude/lostLongitude, description, representativeImageIndex`. 접수 번호 `LR-000123` |
+| POST | `/lost-reports` | 로그인 | 등록(multipart). 같은 사용자가 같은 내용(물품명·종류·분실 날짜·추정 위치)을 60초 안에 다시 보내면 409. `request`: `title*, categoryId*, lostDate*, lostEndDate(기간), lostBuildingId 또는 lostLocation*, lostLocationDetail, lostLatitude/lostLongitude, description, representativeImageIndex`. 접수 번호 `LR-000123` |
 | PATCH | `/lost-reports/{id}` | 작성자 | 내용 수정(multipart). '찾기 완료'·'신고 종료' 상태면 409 |
 | PATCH | `/lost-reports/{id}/status` | 작성자 | `{ status }` 찾는 중 ↔ 찾기 완료 ↔ 신고 종료 |
 | DELETE | `/lost-reports/{id}` | 작성자 | Soft Delete |
@@ -124,6 +124,7 @@
 | PATCH | `/admin/found-items/{id}/storage` | 실제 보관 위치 지정 `{ custodyType, storageId \| storageLocation, storageLocationDetail, … }`. 전달 완료로 지정하면 '신고 접수'는 '보관 중'이 된다. 반환 완료 물품은 409 |
 | PATCH | `/admin/found-items/{id}/found-location` | 발견 위치 수정 `{ foundBuildingId, foundLocation, foundLocationDetail, foundLatitude, foundLongitude }` |
 | GET | `/admin/lost-reports` | 전체 분실 신고(모든 상태). `keyword`, `status`, `page`, `size` |
+| PATCH | `/admin/lost-reports/{id}/status` | `{ status: SEARCHING\|FOUND\|CLOSED }` 관리자가 분실 신고의 상태만 바꾼다(내용은 그대로, 같은 상태면 409). 응답에 신고자 정보 없음 |
 | GET | `/admin/return-requests` | 반환 신청(신청자 이메일·소유 확인 설명·습득자 비공개 특징·`allowedNext`). `status`, `page`, `size` |
 | PATCH | `/admin/return-requests/{id}/status` | `{ status: APPROVED\|REJECTED\|COMPLETED, comment }`. 반려는 `comment` 필수. 대기→승인·반려, 승인→반환 완료·반려(승인 철회). 반환 완료 시 남은 대기 신청은 자동 반려 |
 | POST | `/admin/campus-buildings` | 건물 등록 `{ buildingName, latitude, longitude, description }`(이름 중복·좌표 범위 검증) |
@@ -146,4 +147,4 @@
 
 ## SPEC §20 대비 추가·변경한 경로
 
-`GET /auth/check-email`, `GET /users/me/found-items/{id}`, `PATCH /lost-reports/{id}/status`, `GET /found-items/{id}/return-requests/me`, `PATCH /admin/found-items/{id}/found-location`, `GET /admin/storage-locations`, `POST /dev/reset-demo`. 이유는 `docs/REQUIREMENTS_TRACE.md` §3.
+`GET /auth/check-email`, `GET /users/me/found-items/{id}`, `PATCH /lost-reports/{id}/status`, `PATCH /admin/lost-reports/{id}/status`, `GET /found-items/{id}/return-requests/me`, `PATCH /admin/found-items/{id}/found-location`, `GET /admin/storage-locations`, `POST /dev/reset-demo`. 이유는 `docs/REQUIREMENTS_TRACE.md` §3.

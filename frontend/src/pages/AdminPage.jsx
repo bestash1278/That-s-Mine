@@ -95,7 +95,7 @@ export default function AdminPage() {
       <section role="tabpanel" id={`admin-panel-${active}`} aria-labelledby={`admin-tab-${active}`} tabIndex={0} className="focus:outline-none">
         {active === 'returns' && <AdminReturnRequests onNotice={setNotice} />}
         {active === 'found' && <AdminFoundItems onNotice={setNotice} />}
-        {active === 'lost' && <AdminLostReports />}
+        {active === 'lost' && <AdminLostReports onNotice={setNotice} />}
         {active === 'places' && <AdminPlaces onNotice={setNotice} />}
       </section>
     </div>

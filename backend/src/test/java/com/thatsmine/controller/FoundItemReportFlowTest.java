@@ -183,4 +183,25 @@ class FoundItemReportFlowTest {
         mockMvc.perform(get("/api/v1/found-items/999999"))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    @DisplayName("같은 내용의 신고를 곧바로 다시 보내면 서버가 막는다(409). 내용이 다르면 접수된다")
+    void duplicateSubmissionRejected() throws Exception {
+        CreateFoundItemRequest request = CreateFoundItemRequest.builder()
+                .title("검은색 우산").categoryId(clothing.getCategoryId()).foundDate(LocalDate.now())
+                .foundBuildingId(studentCenter.getBuildingId()).custodyType(CustodyType.PENDING_HANDOVER).build();
+
+        mockMvc.perform(multipart("/api/v1/found-items").file(requestPart(request)).header("Authorization", bearer))
+                .andExpect(status().isOk());
+        mockMvc.perform(multipart("/api/v1/found-items").file(requestPart(request)).header("Authorization", bearer))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CONFLICT"))
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.containsString("같은 내용의 신고가 방금 접수")));
+
+        CreateFoundItemRequest other = CreateFoundItemRequest.builder()
+                .title("검은색 장우산").categoryId(clothing.getCategoryId()).foundDate(LocalDate.now())
+                .foundBuildingId(studentCenter.getBuildingId()).custodyType(CustodyType.PENDING_HANDOVER).build();
+        mockMvc.perform(multipart("/api/v1/found-items").file(requestPart(other)).header("Authorization", bearer))
+                .andExpect(status().isOk());
+    }
 }

@@ -10,6 +10,7 @@ import com.thatsmine.dto.lost.LostReportSummaryDTO;
 import com.thatsmine.security.AuthUser;
 import com.thatsmine.service.AuthService;
 import com.thatsmine.dto.lost.MatchedItemDTO;
+import com.thatsmine.service.DuplicateSubmissionGuard;
 import com.thatsmine.service.LostReportService;
 import com.thatsmine.service.MatchService;
 import jakarta.validation.Valid;
@@ -40,6 +41,7 @@ public class LostReportController {
 
     private final LostReportService lostReportService;
     private final MatchService matchService;
+    private final DuplicateSubmissionGuard submissionGuard;
     private final AuthService authService;
     private final ObjectMapper objectMapper;
 
@@ -99,7 +101,7 @@ public class LostReportController {
         LostReportRequest body = objectMapper.readValue(request, LostReportRequest.class);
         Long userId = authService.requireUser(authUser).getUserId();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success("SUCCESS", "분실 신고가 접수되었습니다.", lostReportService.create(body, images, userId)));
+                .body(ApiResponse.success("SUCCESS", "분실 신고가 접수되었습니다.", submissionGuard.runExclusive(userId, () -> lostReportService.create(body, images, userId))));
     }
 
     /** 내용 수정(본인, '찾는 중'일 때만). 형식은 등록과 같고 keepImageUrls로 남길 사진을 지정한다. */

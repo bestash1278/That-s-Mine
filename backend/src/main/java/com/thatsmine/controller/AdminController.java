@@ -88,6 +88,13 @@ public class AdminController {
                 lostReportService.getAdminReports(keyword, status, page, size)));
     }
 
+    @PatchMapping("/lost-reports/{id:\\d+}/status")
+    public ResponseEntity<ApiResponse<LostReportSummaryDTO>> changeLostReportStatus(
+            @PathVariable Long id, @RequestBody ChangeItemStatusRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("SUCCESS", "분실 신고 상태를 바꿨습니다.",
+                lostReportService.adminChangeStatus(id, request == null ? null : request.getStatus())));
+    }
+
     // ---- 반환 신청
 
     @GetMapping("/return-requests")

@@ -24,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
 
@@ -34,6 +35,8 @@ public class FoundItemService {
 
     private static final int MAX_PAGE_SIZE = 50;
     static final int MAX_MAP_ITEMS = 300;
+    /** 이 시간 안에 같은 내용을 다시 등록하면 중복 제출로 본다 */
+    static final java.time.Duration DUPLICATE_WINDOW = java.time.Duration.ofSeconds(60);
 
     private final FoundItemRepository foundItemRepository;
     private final FoundItemImageRepository foundItemImageRepository;
@@ -164,6 +167,12 @@ public class FoundItemService {
         String foundLocation = trimToNull(request.getFoundLocation());
         if (foundLocation == null && foundBuilding != null) {
             foundLocation = foundBuilding.getBuildingName();
+        }
+
+        // 같은 내용을 짧은 시간 안에 다시 보내면(더블 클릭·재시도) 한 번만 접수한다. 화면의 버튼 비활성화와 별개로 서버가 막는다.
+        if (foundItemRepository.existsRecentDuplicate(reporterId, request.getTitle().trim(), request.getCategoryId(),
+                request.getFoundDate(), foundLocation, LocalDateTime.now().minus(DUPLICATE_WINDOW))) {
+            throw new ConflictException("같은 내용의 신고가 방금 접수되었습니다. 중복 접수를 막기 위해 등록하지 않았어요. 마이페이지에서 확인해 주세요.");
         }
 
         CustodyType custodyType = request.getCustodyType();

@@ -59,4 +59,18 @@ class JwtTokenProviderTest {
         assertThatThrownBy(() -> new JwtTokenProvider("", 60_000)).isInstanceOf(IllegalStateException.class);
         assertThatThrownBy(() -> new JwtTokenProvider("short", 60_000)).isInstanceOf(IllegalStateException.class);
     }
+
+    @Test
+    @DisplayName("토큰마다 고유한 jti와 만료 시각을 담는다(로그아웃 때 무효화하려고)")
+    void jtiIsUniquePerToken() {
+        JwtTokenProvider provider = new JwtTokenProvider(SECRET, 60_000);
+        String first = provider.createToken(user(1L, UserRole.USER));
+        String second = provider.createToken(user(1L, UserRole.USER));
+        var a = provider.parseToken(first).orElseThrow();
+        var b = provider.parseToken(second).orElseThrow();
+        assertThat(a.jti()).isNotBlank().isNotEqualTo(b.jti());
+        assertThat(a.expiresAt()).isAfter(java.time.Instant.now());
+        assertThat(a.user().userId()).isEqualTo(1L);
+        assertThat(provider.parseToken("not-a-token")).isEmpty();
+    }
 }

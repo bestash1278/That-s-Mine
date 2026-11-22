@@ -1,6 +1,6 @@
 # ERD
 
-스키마는 Flyway 마이그레이션이 만든다(`backend/src/main/resources/db/migration/V1__init.sql`, `V2__align_categories_with_spec.sql`, `V3__lost_report_building_and_indexes.sql`). Hibernate는 스키마를 만들거나 바꾸지 않는다(`ddl-auto: none`). 테스트(H2)만 Hibernate가 스키마를 만든다.
+스키마는 Flyway 마이그레이션이 만든다(`backend/src/main/resources/db/migration/V1__init.sql`, `V2__align_categories_with_spec.sql`, `V3__lost_report_building_and_indexes.sql`, `V4__revoked_tokens.sql`). Hibernate는 스키마를 만들거나 바꾸지 않는다(`ddl-auto: none`). 테스트(H2)만 Hibernate가 스키마를 만든다.
 
 ```mermaid
 erDiagram
@@ -125,6 +125,11 @@ erDiagram
         timestamp created_at
         timestamp processed_at
     }
+    REVOKED_TOKENS {
+        varchar jti PK "로그아웃한 JWT의 고유 번호(V4)"
+        timestamp expires_at "토큰 원래 만료 시각(지나면 삭제)"
+        timestamp revoked_at
+    }
     SEARCH_SYNONYMS {
         bigint synonym_id PK
         varchar term "검색어 표현"
@@ -133,7 +138,7 @@ erDiagram
     }
 ```
 
-`SEARCH_SYNONYMS`는 다른 테이블과 외래키로 이어지지 않는다(검색어를 넓힐 때만 쓰는 사전).
+`SEARCH_SYNONYMS`(검색어를 넓힐 때만 쓰는 사전)와 `REVOKED_TOKENS`(로그아웃한 토큰의 jti 차단 목록)는 다른 테이블과 외래키로 이어지지 않는다.
 
 ## SPEC §18과 다른 점 (연구 문서·설계 근거로 추가)
 
@@ -143,6 +148,7 @@ erDiagram
 | `found_items.private_features` | 습득자가 남기는 소유 확인용 비공개 특징. 공개 응답에는 필드를 두지 않고 신고자 본인과 ADMIN만 본다 |
 | `found_items.version` | 반환 처리 동시성의 보조 안전장치(낙관적 락). 주된 중복 반환 방지는 행 잠금(`SELECT … FOR UPDATE`) |
 | `lost_reports.lost_building_id` (V3) | 건물만 고른 분실 신고도 지도 표시·유사 물품 추천에서 위치를 쓰려고. 습득물의 `found_building_id`와 같은 방식 |
+| `revoked_tokens` (V4) | 로그아웃한 JWT를 서버가 기억해 만료 전에도 다시 쓰지 못하게 하려고(SPEC §13). SPEC §18 목록에는 없는 테이블 |
 | `search_synonyms` | 검색어 표현 차이 흡수(이어폰↔에어팟, M05). SPEC §18 목록에는 없는 테이블 |
 | 인덱스(V1·V3) | 카테고리·상태·날짜·좌표·신고자·삭제 시각, 분실 신고 날짜·좌표·건물 |
 

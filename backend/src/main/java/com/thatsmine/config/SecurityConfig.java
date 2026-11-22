@@ -3,6 +3,7 @@ package com.thatsmine.config;
 import com.thatsmine.security.JsonAuthErrorHandlers;
 import com.thatsmine.security.JwtAuthenticationFilter;
 import com.thatsmine.security.JwtTokenProvider;
+import com.thatsmine.security.TokenRevocationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,6 +31,7 @@ public class SecurityConfig {
 
     private final JwtTokenProvider jwtTokenProvider;
     private final JsonAuthErrorHandlers jsonAuthErrorHandlers;
+    private final TokenRevocationService tokenRevocationService;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -65,7 +67,7 @@ public class SecurityConfig {
                         // 그 밖의 API(신고, 반환 신청, 내 정보 등)는 로그인 필요
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider, tokenRevocationService), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -218,4 +218,28 @@ class AuthApiTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("FORBIDDEN"));
     }
+
+    @Test
+    @DisplayName("로그아웃하면 서버가 그 토큰을 무효화한다(만료 전에도 401). 같은 계정의 다른 토큰은 그대로")
+    void logoutRevokesToken() throws Exception {
+        userRepository.save(User.builder().email("logout@test.local").passwordHash(passwordEncoder.encode("abcd1234"))
+                .nickname("로그아웃").role(UserRole.USER).build());
+        String[] tokens = new String[2];
+        for (int i = 0; i < 2; i++) {
+            String body = mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                            .content(json(Map.of("email", "logout@test.local", "password", "abcd1234"))))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+            tokens[i] = objectMapper.readTree(body).at("/data/accessToken").asText();
+        }
+        mockMvc.perform(get("/api/v1/users/me").header("Authorization", "Bearer " + tokens[0])).andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/auth/logout").header("Authorization", "Bearer " + tokens[0])).andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/users/me").header("Authorization", "Bearer " + tokens[0])).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/users/me").header("Authorization", "Bearer " + tokens[1])).andExpect(status().isOk());
+        // 두 번 로그아웃하거나 토큰 없이·잘못된 토큰으로 로그아웃해도 성공
+        mockMvc.perform(post("/api/v1/auth/logout").header("Authorization", "Bearer " + tokens[0])).andExpect(status().isOk());
+        mockMvc.perform(post("/api/v1/auth/logout")).andExpect(status().isOk());
+        mockMvc.perform(post("/api/v1/auth/logout").header("Authorization", "Bearer broken")).andExpect(status().isOk());
+    }
 }
